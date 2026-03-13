@@ -1,0 +1,31 @@
+/* ── LANGUAGE / AUDIO PANEL ──────────────────────────────── */
+.lang-panel{
+  background:#111;border-bottom:1px solid #222;
+  padding:10px 24px 12px;display:flex;flex-wrap:wrap;
+  gap:16px;align-items:flex-start;
+}
+.lang-group{display:flex;flex-direction:column;gap:6px;}
+.lang-group label{
+  font-size:11px;color:#666;font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.lang-btns{display:flex;flex-wrap:wrap;gap:6px;}
+.lang-btn{
+  padding:6px 14px;background:#1a1a1a;
+  border:1px solid #2a2a2a;color:#999;
+  border-radius:20px;cursor:pointer;font-size:12px;
+  transition:.15s;white-space:nowrap;
+}
+.lang-btn:hover{background:#2a2a2a;color:#ccc;border-color:#444;}
+.lang-btn.on{background:#1a3a1a;border-color:#2d6b2d;color:#7fff7f;}
+.lang-btn.on.audio{background:#1a1a3a;border-color:#3a3a8a;color:#aaaaff;}
+.lang-divider{width:1px;background:#222;margin:0 4px;align-self:stretch;}
+.sub-select{
+  padding:6px 10px;background:#1a1a1a;
+  border:1px solid #2a2a2a;border-radius:20px;
+  color:#999;font-size:12px;cursor:pointer;outline:none;
+}
+.sub-select:focus{border-color:#555;}
+@media(max-width:640px){
+  .lang-panel{padding:8px 14px 10px;gap:10px;}
+}

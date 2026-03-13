@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | OTT Explorer</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-box">
+    <h1>🎬 OTT Explorer</h1>
+    <p class="auth-sub">Stream Movies · TV Shows · Anime</p>
+    {% if error %}<div class="err-msg">⚠ {{ error }}</div>{% endif %}
+    <form method="POST">
+      <div class="igroup"><label>Username</label><input type="text" name="username" placeholder="Enter your username" required autocomplete="username"></div>
+      <div class="igroup"><label>Password</label><input type="password" name="password" placeholder="Enter your password" required autocomplete="current-password"></div>
+      <button class="auth-btn" type="submit">Login</button>
+    </form>
+    <div class="auth-switch">No account? <a href="/register">Register here</a></div>
+  </div>
+</div>
+</body>
+</html>

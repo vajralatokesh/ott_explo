@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TV Shows | OTT Explorer</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="{{ url_for('dashboard') }}">🎬 OTT Explorer</a>
+  <button class="hamburger" id="ham-btn" onclick="toggleMenu()">☰</button>
+  <div class="nav-links" id="nav-links">
+    <a href="{{ url_for('dashboard') }}">Movies</a>
+    <a href="{{ url_for('tvshows') }}" class="nav-active">TV Shows</a>
+    <a href="{{ url_for('anime') }}">Anime</a>
+    <a href="{{ url_for('watchlist') }}">❤ Watchlist</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
+</nav>
+
+<form method="GET" action="{{ url_for('tvshows') }}" id="sf">
+<div class="search-bar">
+  <div class="ac-wrap">
+    <input type="text" name="search" id="s-input" class="s-input"
+           placeholder="🔍  Search TV shows & series…"
+           value="{{ search }}" autocomplete="off">
+    <div class="ac-dropdown" id="ac-box"></div>
+  </div>
+  <div class="filter-row">
+    <select name="language" class="s-select">
+      <option value="">🌐 All Languages</option>
+      <option value="en" {% if language=='en' %}selected{% endif %}>English</option>
+      <option value="hi" {% if language=='hi' %}selected{% endif %}>Hindi</option>
+      <option value="ko" {% if language=='ko' %}selected{% endif %}>Korean</option>
+      <option value="ja" {% if language=='ja' %}selected{% endif %}>Japanese</option>
+      <option value="zh" {% if language=='zh' %}selected{% endif %}>Chinese</option>
+      <option value="es" {% if language=='es' %}selected{% endif %}>Spanish</option>
+      <option value="tr" {% if language=='tr' %}selected{% endif %}>Turkish</option>
+      <option value="fr" {% if language=='fr' %}selected{% endif %}>French</option>
+      <option value="ta" {% if language=='ta' %}selected{% endif %}>Tamil</option>
+      <option value="te" {% if language=='te' %}selected{% endif %}>Telugu</option>
+    </select>
+    <select name="genre" class="s-select">
+      <option value="">🎭 All Genres</option>
+      <option value="10759">Action & Adventure</option>
+      <option value="35">Comedy</option><option value="80">Crime</option>
+      <option value="99">Documentary</option><option value="18">Drama</option>
+      <option value="10765">Sci-Fi & Fantasy</option>
+      <option value="9648">Mystery</option><option value="10751">Family</option>
+    </select>
+    <select name="sort_by" class="s-select">
+      <option value=""                  {% if sort_by==''                  %}selected{% endif %}>🔥 Most Popular</option>
+      <option value="first_air_date.desc" {% if sort_by=='first_air_date.desc' %}selected{% endif %}>🆕 Newest First</option>
+      <option value="vote_average.desc" {% if sort_by=='vote_average.desc' %}selected{% endif %}>⭐ Top Rated</option>
+    </select>
+    <button type="submit" class="s-btn">🔍 Search</button>
+  </div>
+</div>
+</form>
+
+<div class="results-header">
+  <h2 class="sec-title">📺 TV Shows & Series</h2>
+  <span class="results-count">{{ tv_list|length }} found</span>
+</div>
+
+<div class="grid">
+{% for s in tv_list %}
+<div class="card">
+  <a href="{{ url_for('tv_details', id=s.id) }}">
+    <img class="card-img" loading="lazy"
+         src="{{ image_base }}{{ s.poster_path }}"
+         onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+  </a>
+  <div class="card-body">
+    <p class="card-title">{{ s.name }}</p>
+    <p class="card-meta">{{ (s.first_air_date or '')[:4] }}{% if s.vote_average and s.vote_average > 0 %} · ⭐ {{ '%.1f'|format(s.vote_average) }}{% endif %}</p>
+    <a href="{{ url_for('add_tv_watchlist', id=s.id) }}"><button class="wl-btn">+ Watchlist</button></a>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+{% if tv_list|length == 0 %}
+<div class="empty"><div class="empty-icon">📺</div><h3>No TV shows found</h3><p>Try a different search or filter</p></div>
+{% endif %}
+
+<script>
+function toggleMenu(){ document.getElementById('nav-links').classList.toggle('open'); }
+var inp=document.getElementById('s-input'),box=document.getElementById('ac-box'),tmr=null;
+inp.addEventListener('input',function(){
+  clearTimeout(tmr);var q=this.value.trim();
+  if(q.length<2){box.style.display='none';box.innerHTML='';return;}
+  tmr=setTimeout(function(){
+    fetch('/api/suggest?q='+encodeURIComponent(q)+'&kind=tv')
+    .then(r=>r.json()).then(function(data){
+      if(!data||!data.length){box.style.display='none';return;}
+      box.innerHTML='';
+      data.forEach(function(item){
+        var d=document.createElement('div');d.className='ac-item';
+        var img=item.poster?'<img src="'+item.poster+'" onerror="this.style.display=\'none\'">':'<div class="ac-no-img">?</div>';
+        d.innerHTML=img+'<div><div class="ac-name">'+item.title+'</div><div class="ac-yr">'+item.year+'</div></div>';
+        d.onclick=function(){inp.value=item.title;box.style.display='none';document.getElementById('sf').submit();};
+        box.appendChild(d);
+      });box.style.display='block';
+    }).catch(function(){});
+  },300);
+});
+document.addEventListener('click',function(e){if(!inp.contains(e.target)&&!box.contains(e.target))box.style.display='none';});
+</script>
+</body>
+</html>

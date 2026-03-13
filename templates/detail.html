@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ movie.title }} | OTT Explorer</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+/* ── NETFLIX-STYLE LANGUAGE PANEL ── */
+.lang-bar{background:#141414;border-top:2px solid #e50914;border-bottom:1px solid #222;padding:14px 24px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;}
+.lang-group{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.lang-group-title{font-size:10px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:5px;}
+.lang-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.lchip{padding:5px 13px;background:#1e1e1e;border:1px solid #333;color:#888;border-radius:30px;cursor:pointer;font-size:12px;transition:.18s;white-space:nowrap;user-select:none;}
+.lchip:hover{background:#282828;color:#ccc;border-color:#555;}
+.lchip.active-audio{background:#0d1a3a;border-color:#3a5bbf;color:#80aaff;font-weight:600;}
+.lchip.active-sub{background:#0d2a0d;border-color:#2d7a2d;color:#70e070;font-weight:600;}
+.lang-divider{width:1px;background:#2a2a2a;margin:0 4px;align-self:stretch;min-height:40px;}
+.lang-note{font-size:11px;color:#555;margin-top:4px;line-height:1.5;max-width:260px;}
+/* srv / player extras */
+.srv-wrap{padding:10px 24px 14px;}
+.srv-tip{font-size:11px;color:#555;margin-bottom:8px;}
+.srv-row{display:flex;flex-wrap:wrap;gap:6px;}
+.srv-btn{padding:6px 13px;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;border-radius:7px;cursor:pointer;font-size:12px;transition:.18s;white-space:nowrap;}
+.srv-btn:hover,.srv-btn.on{background:#e50914;border-color:#e50914;color:#fff;}
+.player-status{padding:5px 24px 4px;font-size:12px;color:#777;min-height:22px;}
+.player-error{background:#1a0000;border:1px solid #550000;border-radius:8px;padding:12px 18px;margin:0 24px 8px;color:#ff8080;font-size:13px;display:none;line-height:1.6;}
+.section-title{padding:14px 24px 6px;font-size:15px;font-weight:700;border-left:4px solid #e50914;}
+@media(max-width:640px){
+  .lang-bar{padding:10px 14px;gap:12px;}
+  .srv-wrap{padding:8px 14px 12px;}
+}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="{{ url_for('dashboard') }}">🎬 OTT Explorer</a>
+  <button class="hamburger" onclick="document.getElementById('nl').classList.toggle('open')">☰</button>
+  <div class="nav-links" id="nl">
+    <a href="{{ url_for('dashboard') }}" class="nav-active">Movies</a>
+    <a href="{{ url_for('tvshows') }}">TV Shows</a>
+    <a href="{{ url_for('anime') }}">Anime</a>
+    <a href="{{ url_for('watchlist') }}">❤ Watchlist</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
+</nav>
+
+<div class="hero" style="background-image:linear-gradient(to top,#0b0b0b 18%,rgba(0,0,0,.2)),url('{{ image_orig }}{{ movie.backdrop_path }}');">
+  <h1>{{ movie.title }}</h1>
+</div>
+
+<div class="detail-wrap">
+  <img class="d-poster"
+       src="{{ image_base }}{{ movie.poster_path }}"
+       onerror="this.src='https://placehold.co/220x330/111/555?text=No+Poster'">
+  <div class="d-info">
+    <h2>{{ movie.title }}</h2>
+    <p class="overview">{{ movie.overview or 'No description available.' }}</p>
+    <p class="d-rating">⭐ {{ '%.1f'|format(movie.vote_average) if movie.vote_average else 'N/A' }} / 10</p>
+    <p class="d-meta">
+      {% if movie.release_date %}📅 {{ movie.release_date }}{% endif %}
+      {% if movie.runtime %} · ⏱ {{ movie.runtime }} min{% endif %}
+      {% if movie.original_language %} · 🌐 {{ movie.original_language|upper }}{% endif %}
+    </p>
+    {% if movie.genres %}
+    <div class="tag-wrap">{% for g in movie.genres %}<span class="tag">{{ g.name }}</span>{% endfor %}</div>
+    {% endif %}
+    <div class="act-btns">
+      <a href="{{ url_for('add_movie_watchlist', id=movie.id) }}"><button class="btn-ghost">❤ Watchlist</button></a>
+      {% if trailer %}<button class="btn-red" onclick="window.open('https://www.youtube.com/watch?v={{ trailer.key }}','_blank')">▶ Trailer</button>{% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div class="player-wrap">
+  <iframe id="player"
+    src="https://vidsrc.cc/v2/embed/movie/{{ movie.id }}"
+    allowfullscreen allow="autoplay; encrypted-media; fullscreen"></iframe>
+</div>
+<div class="player-status" id="pstatus">▶ Loading on vidsrc.cc…</div>
+<div class="player-error" id="perror">
+  ⚠ <strong>Server doesn't have this movie or language.</strong>
+  Try a different server — each has its own library and language tracks.
+</div>
+
+<!-- 🌐 NETFLIX-STYLE LANGUAGE PANEL -->
+<div class="lang-bar">
+
+  <div class="lang-group">
+    <div class="lang-group-title">🔊 Audio Language</div>
+    <div class="lang-chips" id="aud-chips">
+      <button class="lchip active-audio" data-lang="en"  onclick="setAudio(this,'en')">🇬🇧 English</button>
+      <button class="lchip"              data-lang="hi"  onclick="setAudio(this,'hi')">🇮🇳 Hindi</button>
+      <button class="lchip"              data-lang="ta"  onclick="setAudio(this,'ta')">Tamil</button>
+      <button class="lchip"              data-lang="te"  onclick="setAudio(this,'te')">Telugu</button>
+      <button class="lchip"              data-lang="ml"  onclick="setAudio(this,'ml')">Malayalam</button>
+      <button class="lchip"              data-lang="kn"  onclick="setAudio(this,'kn')">Kannada</button>
+      <button class="lchip"              data-lang="mr"  onclick="setAudio(this,'mr')">Marathi</button>
+      <button class="lchip"              data-lang="fr"  onclick="setAudio(this,'fr')">🇫🇷 French</button>
+      <button class="lchip"              data-lang="es"  onclick="setAudio(this,'es')">🇪🇸 Spanish</button>
+      <button class="lchip"              data-lang="de"  onclick="setAudio(this,'de')">🇩🇪 German</button>
+      <button class="lchip"              data-lang="ja"  onclick="setAudio(this,'ja')">🇯🇵 Japanese</button>
+      <button class="lchip"              data-lang="ko"  onclick="setAudio(this,'ko')">🇰🇷 Korean</button>
+      <button class="lchip"              data-lang="zh"  onclick="setAudio(this,'zh')">🇨🇳 Chinese</button>
+      <button class="lchip"              data-lang="pt"  onclick="setAudio(this,'pt')">Portuguese</button>
+      <button class="lchip"              data-lang="ru"  onclick="setAudio(this,'ru')">🇷🇺 Russian</button>
+      <button class="lchip"              data-lang="ar"  onclick="setAudio(this,'ar')">🇸🇦 Arabic</button>
+      <button class="lchip"              data-lang="tr"  onclick="setAudio(this,'tr')">Turkish</button>
+    </div>
+    <div class="lang-note" id="aud-note">Audio availability depends on what tracks the movie was released with.</div>
+  </div>
+
+  <div class="lang-divider"></div>
+
+  <div class="lang-group">
+    <div class="lang-group-title">💬 Subtitles</div>
+    <div class="lang-chips" id="sub-chips">
+      <button class="lchip active-sub"  data-lang="off" onclick="setSub(this,'off')">Off</button>
+      <button class="lchip"             data-lang="en"  onclick="setSub(this,'en')">🇬🇧 English</button>
+      <button class="lchip"             data-lang="hi"  onclick="setSub(this,'hi')">🇮🇳 Hindi</button>
+      <button class="lchip"             data-lang="ta"  onclick="setSub(this,'ta')">Tamil</button>
+      <button class="lchip"             data-lang="te"  onclick="setSub(this,'te')">Telugu</button>
+      <button class="lchip"             data-lang="fr"  onclick="setSub(this,'fr')">🇫🇷 French</button>
+      <button class="lchip"             data-lang="es"  onclick="setSub(this,'es')">🇪🇸 Spanish</button>
+      <button class="lchip"             data-lang="de"  onclick="setSub(this,'de')">🇩🇪 German</button>
+      <button class="lchip"             data-lang="ja"  onclick="setSub(this,'ja')">🇯🇵 Japanese</button>
+      <button class="lchip"             data-lang="ko"  onclick="setSub(this,'ko')">🇰🇷 Korean</button>
+      <button class="lchip"             data-lang="zh"  onclick="setSub(this,'zh')">🇨🇳 Chinese</button>
+      <button class="lchip"             data-lang="ar"  onclick="setSub(this,'ar')">🇸🇦 Arabic</button>
+      <button class="lchip"             data-lang="ru"  onclick="setSub(this,'ru')">🇷🇺 Russian</button>
+      <button class="lchip"             data-lang="pt"  onclick="setSub(this,'pt')">Portuguese</button>
+      <button class="lchip"             data-lang="tr"  onclick="setSub(this,'tr')">Turkish</button>
+    </div>
+    <div class="lang-note">Subtitles shown inside the player. Use Server 1 or 2 for best subtitle support.</div>
+  </div>
+
+</div>
+
+<!-- SERVERS -->
+<div class="srv-wrap">
+  <div class="srv-tip">💡 Server 1 has the best language support. If your language isn't playing, try Server 2 or 3:</div>
+  <div class="srv-row">
+    <button class="srv-btn on" id="srv1"  onclick="pick(1)">① vidsrc.cc</button>
+    <button class="srv-btn"    id="srv2"  onclick="pick(2)">② vidsrc.me</button>
+    <button class="srv-btn"    id="srv3"  onclick="pick(3)">③ vidsrc.to</button>
+    <button class="srv-btn"    id="srv4"  onclick="pick(4)">④ embed.su</button>
+    <button class="srv-btn"    id="srv5"  onclick="pick(5)">⑤ autoembed</button>
+    <button class="srv-btn"    id="srv6"  onclick="pick(6)">⑥ multiembed</button>
+    <button class="srv-btn"    id="srv7"  onclick="pick(7)">⑦ vidsrc.xyz</button>
+    <button class="srv-btn"    id="srv8"  onclick="pick(8)">⑧ vidlink</button>
+    <button class="srv-btn"    id="srv9"  onclick="pick(9)">⑨ smashystream</button>
+    <button class="srv-btn"    id="srv10" onclick="pick(10)">⑩ 2embed</button>
+  </div>
+</div>
+
+<script>
+var MID  = "{{ movie.id }}";
+var IMDB = "{{ imdb_id }}";
+var cur  = 1;
+var audLang = 'en';
+var subLang = 'off';
+var timer   = null;
+
+/* 
+  How language works per server:
+  - Server 1 (vidsrc.cc):  ds_langs=<sub_code>  ds_audio=<audio_code>  ← best support
+  - Server 2 (vidsrc.me):  lang=<audio_code>  ds_langs=<sub_code>
+  - Server 3 (vidsrc.to):  lang=<audio_code>
+  - Server 8 (vidlink):    primaryColor, secondaryColor, iconColor (styling only)
+  - Others:                no reliable lang param — player's own in-player menu works
+*/
+function buildUrl(n) {
+  var hasSub = subLang !== 'off';
+  var p;
+
+  if (n === 1) {
+    p = [];
+    if (hasSub)             p.push('ds_langs=' + subLang);
+    if (audLang !== 'en')   p.push('ds_audio=' + audLang);
+    return 'https://vidsrc.cc/v2/embed/movie/' + MID + (p.length ? '?' + p.join('&') : '');
+  }
+  if (n === 2) {
+    p = 'https://vidsrc.me/embed/movie/' + MID + '?lang=' + audLang;
+    if (hasSub) p += '&ds_langs=' + subLang;
+    return p;
+  }
+  if (n === 3) {
+    return 'https://vidsrc.to/embed/movie/' + MID + (audLang !== 'en' ? '?lang=' + audLang : '');
+  }
+  if (n === 4) return 'https://embed.su/embed/movie/' + MID;
+  if (n === 5) return 'https://player.autoembed.cc/embed/movie/' + MID;
+  if (n === 6) return 'https://multiembed.mov/?video_id=' + MID + '&tmdb=1';
+  if (n === 7) return 'https://vidsrc.xyz/embed/movie?tmdb=' + MID;
+  if (n === 8) return 'https://vidlink.pro/movie/' + MID;
+  if (n === 9) return 'https://player.smashy.stream/movie/' + MID;
+  if (n === 10) return 'https://2embed.cc/embed/' + (IMDB || MID);
+}
+
+var names = {
+  1:'vidsrc.cc', 2:'vidsrc.me', 3:'vidsrc.to', 4:'embed.su',
+  5:'autoembed',  6:'multiembed', 7:'vidsrc.xyz', 8:'vidlink',
+  9:'smashystream', 10:'2embed'
+};
+
+function pick(n) {
+  cur = n;
+  document.querySelectorAll('.srv-btn').forEach(function(b){ b.className='srv-btn'; });
+  document.getElementById('srv'+n).className = 'srv-btn on';
+  document.getElementById('perror').style.display = 'none';
+  document.getElementById('pstatus').textContent  = '▶ Loading on ' + names[n] + '…';
+  document.getElementById('player').src = buildUrl(n);
+  clearTimeout(timer);
+  timer = setTimeout(function(){ document.getElementById('perror').style.display='block'; }, 9000);
+}
+
+function setAudio(btn, lang) {
+  audLang = lang;
+  document.querySelectorAll('#aud-chips .lchip').forEach(function(b){ b.classList.remove('active-audio'); });
+  btn.classList.add('active-audio');
+
+  // Show tip if server doesn't support lang params
+  var note = document.getElementById('aud-note');
+  if (cur >= 4) {
+    note.textContent = '⚠ Switch to Server 1 or 2 for audio language control.';
+    note.style.color = '#e5a000';
+  } else {
+    note.textContent = 'Audio availability depends on what tracks the movie was released with.';
+    note.style.color = '';
+  }
+  pick(cur);
+}
+
+function setSub(btn, lang) {
+  subLang = lang;
+  document.querySelectorAll('#sub-chips .lchip').forEach(function(b){ b.classList.remove('active-sub'); });
+  btn.classList.add('active-sub');
+  pick(cur);
+}
+
+document.getElementById('player').onload = function() {
+  clearTimeout(timer);
+  document.getElementById('perror').style.display = 'none';
+  var audBtn = document.querySelector('#aud-chips .lchip.active-audio');
+  var subBtn = document.querySelector('#sub-chips .lchip.active-sub');
+  var audTxt = audBtn ? audBtn.textContent.replace(/^.{1,2}\s/,'') : 'English';
+  var subTxt = subBtn ? subBtn.textContent.replace(/^.{1,2}\s/,'') : 'Off';
+  document.getElementById('pstatus').textContent =
+    '✅ Playing on ' + names[cur] + '  ·  🔊 ' + audTxt + '  ·  💬 ' + subTxt;
+};
+</script>
+</body>
+</html>

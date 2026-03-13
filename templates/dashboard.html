@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movies | OTT Explorer</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="navbar-brand" href="{{ url_for('dashboard') }}">🎬 OTT Explorer</a>
+  <button class="hamburger" id="ham-btn" onclick="toggleMenu()">☰</button>
+  <div class="nav-links" id="nav-links">
+    <a href="{{ url_for('dashboard') }}" class="nav-active">Movies</a>
+    <a href="{{ url_for('tvshows') }}">TV Shows</a>
+    <a href="{{ url_for('anime') }}">Anime</a>
+    <a href="{{ url_for('watchlist') }}">❤ Watchlist</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
+</nav>
+
+<!-- SEARCH FORM -->
+<form method="GET" action="{{ url_for('dashboard') }}" id="sf">
+<div class="search-bar">
+
+  <!-- Search input with autocomplete -->
+  <div class="ac-wrap">
+    <input type="text" name="search" id="s-input" class="s-input"
+           placeholder="🔍  Search any movie — old or new, any language…"
+           value="{{ search }}" autocomplete="off">
+    <div class="ac-dropdown" id="ac-box"></div>
+  </div>
+
+  <div class="filter-row">
+    <!-- Language -->
+    <select name="language" class="s-select">
+      <option value="">🌐 All Languages</option>
+      <option value="en"  {% if language=='en'  %}selected{% endif %}>English</option>
+      <option value="hi"  {% if language=='hi'  %}selected{% endif %}>Hindi</option>
+      <option value="ta"  {% if language=='ta'  %}selected{% endif %}>Tamil</option>
+      <option value="te"  {% if language=='te'  %}selected{% endif %}>Telugu</option>
+      <option value="ml"  {% if language=='ml'  %}selected{% endif %}>Malayalam</option>
+      <option value="kn"  {% if language=='kn'  %}selected{% endif %}>Kannada</option>
+      <option value="mr"  {% if language=='mr'  %}selected{% endif %}>Marathi</option>
+      <option value="bn"  {% if language=='bn'  %}selected{% endif %}>Bengali</option>
+      <option value="pa"  {% if language=='pa'  %}selected{% endif %}>Punjabi</option>
+      <option value="gu"  {% if language=='gu'  %}selected{% endif %}>Gujarati</option>
+      <option value="ja"  {% if language=='ja'  %}selected{% endif %}>Japanese</option>
+      <option value="ko"  {% if language=='ko'  %}selected{% endif %}>Korean</option>
+      <option value="zh"  {% if language=='zh'  %}selected{% endif %}>Chinese</option>
+      <option value="fr"  {% if language=='fr'  %}selected{% endif %}>French</option>
+      <option value="es"  {% if language=='es'  %}selected{% endif %}>Spanish</option>
+      <option value="de"  {% if language=='de'  %}selected{% endif %}>German</option>
+      <option value="it"  {% if language=='it'  %}selected{% endif %}>Italian</option>
+      <option value="pt"  {% if language=='pt'  %}selected{% endif %}>Portuguese</option>
+      <option value="ru"  {% if language=='ru'  %}selected{% endif %}>Russian</option>
+      <option value="tr"  {% if language=='tr'  %}selected{% endif %}>Turkish</option>
+      <option value="ar"  {% if language=='ar'  %}selected{% endif %}>Arabic</option>
+      <option value="th"  {% if language=='th'  %}selected{% endif %}>Thai</option>
+      <option value="vi"  {% if language=='vi'  %}selected{% endif %}>Vietnamese</option>
+      <option value="id"  {% if language=='id'  %}selected{% endif %}>Indonesian</option>
+    </select>
+
+    <!-- Genre -->
+    <select name="genre" class="s-select">
+      <option value="">🎭 All Genres</option>
+      <option value="28"    {% if genre=='28'    %}selected{% endif %}>Action</option>
+      <option value="12"    {% if genre=='12'    %}selected{% endif %}>Adventure</option>
+      <option value="16"    {% if genre=='16'    %}selected{% endif %}>Animation</option>
+      <option value="35"    {% if genre=='35'    %}selected{% endif %}>Comedy</option>
+      <option value="80"    {% if genre=='80'    %}selected{% endif %}>Crime</option>
+      <option value="99"    {% if genre=='99'    %}selected{% endif %}>Documentary</option>
+      <option value="18"    {% if genre=='18'    %}selected{% endif %}>Drama</option>
+      <option value="10751" {% if genre=='10751' %}selected{% endif %}>Family</option>
+      <option value="14"    {% if genre=='14'    %}selected{% endif %}>Fantasy</option>
+      <option value="36"    {% if genre=='36'    %}selected{% endif %}>History</option>
+      <option value="27"    {% if genre=='27'    %}selected{% endif %}>Horror</option>
+      <option value="9648"  {% if genre=='9648'  %}selected{% endif %}>Mystery</option>
+      <option value="10749" {% if genre=='10749' %}selected{% endif %}>Romance</option>
+      <option value="878"   {% if genre=='878'   %}selected{% endif %}>Sci-Fi</option>
+      <option value="53"    {% if genre=='53'    %}selected{% endif %}>Thriller</option>
+      <option value="10752" {% if genre=='10752' %}selected{% endif %}>War</option>
+      <option value="37"    {% if genre=='37'    %}selected{% endif %}>Western</option>
+    </select>
+
+    <!-- Decade (for old movies) -->
+    <select name="decade" class="s-select">
+      <option value="">📅 All Eras</option>
+      <option value="2020" {% if decade=='2020' %}selected{% endif %}>2020s</option>
+      <option value="2010" {% if decade=='2010' %}selected{% endif %}>2010s</option>
+      <option value="2000" {% if decade=='2000' %}selected{% endif %}>2000s</option>
+      <option value="1990" {% if decade=='1990' %}selected{% endif %}>1990s</option>
+      <option value="1980" {% if decade=='1980' %}selected{% endif %}>1980s</option>
+      <option value="1970" {% if decade=='1970' %}selected{% endif %}>1970s</option>
+      <option value="1960" {% if decade=='1960' %}selected{% endif %}>1960s</option>
+      <option value="1950" {% if decade=='1950' %}selected{% endif %}>1950s</option>
+      <option value="1940" {% if decade=='1940' %}selected{% endif %}>1940s</option>
+      <option value="1930" {% if decade=='1930' %}selected{% endif %}>1930s</option>
+    </select>
+
+    <!-- Sort -->
+    <select name="sort_by" class="s-select">
+      <option value=""                  {% if sort_by==''                  %}selected{% endif %}>🔥 Most Popular</option>
+      <option value="release_date.desc" {% if sort_by=='release_date.desc' %}selected{% endif %}>🆕 Newest First</option>
+      <option value="release_date.asc"  {% if sort_by=='release_date.asc'  %}selected{% endif %}>📜 Oldest First</option>
+      <option value="vote_average.desc" {% if sort_by=='vote_average.desc' %}selected{% endif %}>⭐ Top Rated</option>
+      <option value="revenue.desc"      {% if sort_by=='revenue.desc'      %}selected{% endif %}>💰 Highest Grossing</option>
+    </select>
+
+    <!-- Year -->
+    <input type="number" name="year" class="s-year" placeholder="Year e.g. 1994"
+           value="{{ year }}" min="1900" max="2025">
+
+    <button type="submit" class="s-btn">🔍 Search</button>
+  </div>
+</div>
+</form>
+
+<!-- RESULTS HEADING -->
+<div class="results-header">
+  <h2 class="sec-title">
+    {% if search %}Results for "{{ search }}"
+    {% elif decade %}{{ decade }}s Movies
+    {% elif language %}{{ language|upper }} Movies
+    {% else %}🎬 Movies
+    {% endif %}
+  </h2>
+  <span class="results-count">{{ movies|length }} found</span>
+</div>
+
+<!-- GRID -->
+<div class="grid">
+{% for m in movies %}
+<div class="card">
+  <a href="{{ url_for('movie_details', id=m.id) }}">
+    <img class="card-img" loading="lazy"
+         src="{{ image_base }}{{ m.poster_path }}"
+         onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+  </a>
+  <div class="card-body">
+    <p class="card-title">{{ m.title }}</p>
+    <p class="card-meta">
+      {{ (m.release_date or '')[:4] }}
+      {% if m.vote_average and m.vote_average > 0 %} · ⭐ {{ '%.1f'|format(m.vote_average) }}{% endif %}
+    </p>
+    <a href="{{ url_for('add_movie_watchlist', id=m.id) }}">
+      <button class="wl-btn">+ Watchlist</button>
+    </a>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+{% if movies|length == 0 %}
+<div class="empty">
+  <div class="empty-icon">🎬</div>
+  <h3>No movies found</h3>
+  <p>Try a different search, genre, decade, or year</p>
+</div>
+{% endif %}
+
+<script>
+function toggleMenu(){
+  var n = document.getElementById('nav-links');
+  n.classList.toggle('open');
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(e){
+  var nav = document.getElementById('nav-links');
+  var btn = document.getElementById('ham-btn');
+  if(nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)){
+    nav.classList.remove('open');
+  }
+});
+
+// Autocomplete
+var inp = document.getElementById('s-input');
+var box = document.getElementById('ac-box');
+var tmr = null;
+
+inp.addEventListener('input', function(){
+  clearTimeout(tmr);
+  var q = this.value.trim();
+  if(q.length < 2){ box.style.display='none'; box.innerHTML=''; return; }
+  tmr = setTimeout(function(){
+    fetch('/api/suggest?q=' + encodeURIComponent(q) + '&kind=movie')
+      .then(r => r.json())
+      .then(function(data){
+        if(!data || !data.length){ box.style.display='none'; return; }
+        box.innerHTML = '';
+        data.forEach(function(item){
+          var d = document.createElement('div');
+          d.className = 'ac-item';
+          var img = item.poster ? '<img src="'+item.poster+'" onerror="this.style.display=\'none\'">' : '<div class="ac-no-img">?</div>';
+          d.innerHTML = img + '<div><div class="ac-name">'+item.title+'</div><div class="ac-yr">'+item.year+'</div></div>';
+          d.onclick = function(){
+            inp.value = item.title;
+            box.style.display = 'none';
+            document.getElementById('sf').submit();
+          };
+          box.appendChild(d);
+        });
+        box.style.display = 'block';
+      }).catch(function(){});
+  }, 300);
+});
+
+document.addEventListener('click', function(e){
+  if(!inp.contains(e.target) && !box.contains(e.target)) box.style.display='none';
+});
+</script>
+</body>
+</html>
