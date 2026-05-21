@@ -1,241 +1,231 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ tv.name }} | OTT Explorer</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<style>
-.lang-bar{background:#141414;border-top:2px solid #e50914;border-bottom:1px solid #222;padding:14px 24px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;}
-.lang-group{display:flex;flex-direction:column;gap:8px;min-width:0;}
-.lang-group-title{font-size:10px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
-.lang-chips{display:flex;flex-wrap:wrap;gap:6px;}
-.lchip{padding:5px 13px;background:#1e1e1e;border:1px solid #333;color:#888;border-radius:30px;cursor:pointer;font-size:12px;transition:.18s;white-space:nowrap;user-select:none;}
-.lchip:hover{background:#282828;color:#ccc;border-color:#555;}
-.lchip.active-audio{background:#0d1a3a;border-color:#3a5bbf;color:#80aaff;font-weight:600;}
-.lchip.active-sub{background:#0d2a0d;border-color:#2d7a2d;color:#70e070;font-weight:600;}
-.lang-note{font-size:11px;color:#555;margin-top:4px;line-height:1.5;max-width:280px;}
-.lang-divider{width:1px;background:#2a2a2a;margin:0 4px;align-self:stretch;min-height:40px;}
-.srv-wrap{padding:10px 24px 14px;}
-.srv-tip{font-size:11px;color:#555;margin-bottom:8px;}
-.srv-row{display:flex;flex-wrap:wrap;gap:6px;}
-.srv-btn{padding:6px 13px;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;border-radius:7px;cursor:pointer;font-size:12px;transition:.18s;white-space:nowrap;}
-.srv-btn:hover,.srv-btn.on{background:#e50914;border-color:#e50914;color:#fff;}
-.player-status{padding:5px 24px 4px;font-size:12px;color:#777;min-height:22px;}
-.player-error{background:#1a0000;border:1px solid #550000;border-radius:8px;padding:12px 18px;margin:0 24px 8px;color:#ff8080;font-size:13px;display:none;line-height:1.6;}
-.section-title{padding:14px 24px 6px;font-size:15px;font-weight:700;border-left:4px solid #e50914;}
-@media(max-width:640px){.lang-bar{padding:10px 14px;gap:12px;}.srv-wrap{padding:8px 14px 12px;}}
-</style>
-</head>
-<body>
-<nav class="navbar">
-  <a class="navbar-brand" href="{{ url_for('dashboard') }}">🎬 OTT Explorer</a>
-  <button class="hamburger" onclick="document.getElementById('nl').classList.toggle('open')">☰</button>
-  <div class="nav-links" id="nl">
-    <a href="{{ url_for('dashboard') }}">Movies</a>
-    <a href="{{ url_for('tvshows') }}" class="nav-active">TV Shows</a>
-    <a href="{{ url_for('anime') }}">Anime</a>
-    <a href="{{ url_for('watchlist') }}">❤ Watchlist</a>
-    <a href="{{ url_for('logout') }}">Logout</a>
-  </div>
-</nav>
+{% extends "base.html" %}
 
-<div class="hero" style="background-image:linear-gradient(to top,#0b0b0b 18%,rgba(0,0,0,.2)),url('{{ image_orig }}{{ tv.backdrop_path }}');">
-  <h1>{{ tv.name }}</h1>
-</div>
+{% block title %}{{ tv.name }} | S{{ current_season }}E{{ current_episode }} | OTT Explorer{% endblock %}
 
-<div class="detail-wrap">
-  <img class="d-poster"
-       src="{{ image_base }}{{ tv.poster_path }}"
-       onerror="this.src='https://placehold.co/220x330/111/555?text=No+Poster'">
-  <div class="d-info">
-    <h2>{{ tv.name }}</h2>
-    <p class="overview">{{ tv.overview or 'No description available.' }}</p>
-    <p class="d-rating">⭐ {{ '%.1f'|format(tv.vote_average) if tv.vote_average else 'N/A' }} / 10</p>
-    <p class="d-meta">
-      {% if tv.first_air_date %}📅 {{ tv.first_air_date[:4] }}{% endif %}
-      {% if tv.number_of_seasons %} · {{ tv.number_of_seasons }} Season(s){% endif %}
-      {% if tv.number_of_episodes %} · {{ tv.number_of_episodes }} Episodes{% endif %}
-    </p>
-    {% if tv.genres %}
-    <div class="tag-wrap">{% for g in tv.genres %}<span class="tag">{{ g.name }}</span>{% endfor %}</div>
-    {% endif %}
-    <div class="act-btns">
-      <a href="{{ url_for('add_tv_watchlist', id=tv.id) }}"><button class="btn-ghost">❤ Watchlist</button></a>
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- MEDIA BACKDROP AND DETAILS BANNER -->
+<div class="billboard" style="background-image: url('{{ IMAGE_ORIG }}{{ tv.backdrop_path }}'); height: 50vh;">
+    <div class="billboard-content">
+        <h1 class="billboard-title">{{ tv.name }}</h1>
+        <div class="billboard-meta">
+            <span class="billboard-rating">⭐ {{ '%.1f'|format(tv.vote_average or 0) }}</span>
+            <span>{% if tv.first_air_date %}{{ tv.first_air_date[:4] }}{% endif %}</span>
+            <span>{{ tv.number_of_seasons }} Seasons</span>
+            <span>S{{ current_season }} E{{ current_episode }}</span>
+        </div>
+        <p class="billboard-overview">{{ tv.overview or 'No description available.' }}</p>
+        
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button class="watchlist-toggle-btn landing-btn {% if in_watchlist %}added{% endif %}"
+                    data-content-id="{{ tv.id }}"
+                    data-content-type="tv"
+                    data-title="{{ tv.name }}"
+                    data-poster="{{ tv.poster_path }}"
+                    style="padding:10px 24px; font-size:14px; border-radius: var(--radius-sm); text-transform:none;">
+                {% if in_watchlist %}✓ Added{% else %}+ Watchlist{% endif %}
+            </button>
+        </div>
     </div>
-  </div>
 </div>
 
-<div class="player-wrap">
-  <iframe id="player"
-    src="https://vidsrc.cc/v2/embed/tv/{{ tv.id }}/{{ current_season }}/1"
-    allowfullscreen allow="autoplay; encrypted-media; fullscreen"></iframe>
-</div>
-<div class="player-status" id="pstatus">▶ Loading S{{ current_season }}E1 on vidsrc.cc…</div>
-<div class="player-error" id="perror">
-  ⚠ <strong>Server doesn't have this episode or language.</strong> Try another server below.
-</div>
+<!-- RESPONSIVE EMBEDDED PLAYER WITH CINEMATIC OVERLAY -->
+<div style="padding: 40px 4% 10px;">
+    <h2 class="row-title">▶ TV Stream Showcase <span>Season {{ current_season }} · Episode {{ current_episode }}</span></h2>
+    <div class="player-wrap main-player-wrapper">
+        <iframe id="player" class="player-iframe" 
+                data-content-id="{{ tv.id }}"
+                data-content-type="tv"
+                data-title="{{ tv.name }}"
+                data-poster="{{ tv.poster_path }}"
+                data-season="{{ current_season }}"
+                data-episode="{{ current_episode }}"
+                data-saved-progress="{{ continue_watching.progress if continue_watching else 0 }}"
+                src="https://vidsrc.to/embed/tv/{{ tv.id }}/{{ current_season }}/{{ current_episode }}"
+                allowfullscreen allow="autoplay; encrypted-media; fullscreen">
+        </iframe>
 
-<!-- LANGUAGE PANEL -->
-<div class="lang-bar">
-  <div class="lang-group">
-    <div class="lang-group-title">🔊 Audio Language</div>
-    <div class="lang-chips" id="aud-chips">
-      <button class="lchip active-audio" onclick="setAudio(this,'en')">🇬🇧 English</button>
-      <button class="lchip"              onclick="setAudio(this,'hi')">🇮🇳 Hindi</button>
-      <button class="lchip"              onclick="setAudio(this,'ta')">Tamil</button>
-      <button class="lchip"              onclick="setAudio(this,'te')">Telugu</button>
-      <button class="lchip"              onclick="setAudio(this,'ml')">Malayalam</button>
-      <button class="lchip"              onclick="setAudio(this,'kn')">Kannada</button>
-      <button class="lchip"              onclick="setAudio(this,'fr')">🇫🇷 French</button>
-      <button class="lchip"              onclick="setAudio(this,'es')">🇪🇸 Spanish</button>
-      <button class="lchip"              onclick="setAudio(this,'de')">🇩🇪 German</button>
-      <button class="lchip"              onclick="setAudio(this,'ja')">🇯🇵 Japanese</button>
-      <button class="lchip"              onclick="setAudio(this,'ko')">🇰🇷 Korean</button>
-      <button class="lchip"              onclick="setAudio(this,'zh')">🇨🇳 Chinese</button>
-      <button class="lchip"              onclick="setAudio(this,'pt')">Portuguese</button>
-      <button class="lchip"              onclick="setAudio(this,'ru')">🇷🇺 Russian</button>
-      <button class="lchip"              onclick="setAudio(this,'ar')">🇸🇦 Arabic</button>
-      <button class="lchip"              onclick="setAudio(this,'tr')">Turkish</button>
+        <!-- Cinematic Controls Overlay -->
+        <div class="custom-player-overlay" id="playerOverlay">
+            <!-- Top Header -->
+            <div class="player-header">
+                <button class="player-back-btn" onclick="window.location.href='{{ url_for('main.dashboard') }}'" title="Back to Dashboard">
+                    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                </button>
+                <div class="player-title-info">
+                    <span class="player-main-title">{{ tv.name }}</span>
+                    <span class="player-sub-title">Season {{ current_season }} · Episode {{ current_episode }}</span>
+                </div>
+            </div>
+
+            <!-- Center Area (Transparent) -->
+            <div class="player-center-action">
+                <button class="player-skip-intro-btn hidden" id="skipIntroBtn">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg> Skip Intro
+                </button>
+            </div>
+
+            <!-- Bottom Controls Bar -->
+            <div class="player-controls">
+                <div class="player-progress-container">
+                    <div class="player-progress-bar" id="playerProgressBar"></div>
+                </div>
+                
+                <div class="player-controls-row">
+                    <div class="player-controls-left">
+                        <button class="ctrl-btn" id="playPauseBtn" title="Play/Pause">
+                            <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        
+                        <!-- Next Episode Action (within controls) -->
+                        {% set total_episodes = season.episodes|length if season and season.episodes else 24 %}
+                        {% if current_episode < total_episodes %}
+                            <a href="{{ url_for('tvshows.detail', tv_id=tv.id) }}?season={{ current_season }}&episode={{ current_episode + 1 }}" id="nextEpBtn" class="ctrl-btn" title="Next Episode">
+                                <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                            </a>
+                        {% elif current_season < tv.number_of_seasons %}
+                            <a href="{{ url_for('tvshows.detail', tv_id=tv.id) }}?season={{ current_season + 1 }}&episode=1" id="nextEpBtn" class="ctrl-btn" title="Next Season S{{ current_season + 1 }}E1">
+                                <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                            </a>
+                        {% endif %}
+                        
+                        <div class="volume-container">
+                            <button class="ctrl-btn" id="muteBtn" title="Mute">
+                                <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                            </button>
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+                        </div>
+                        
+                        <span class="player-time-display" id="timeDisplay">0:00 / 0:00</span>
+                    </div>
+                    
+                    <div class="player-controls-right">
+                        <!-- Server Selector -->
+                        <div class="player-dropdown-container">
+                            <button class="ctrl-btn dropdown-trigger" id="serverSelectorBtn">⚙ Server</button>
+                            <div class="player-dropdown-menu" id="serverDropdownMenu"></div>
+                        </div>
+                        
+                        <!-- Subtitles Selector -->
+                        <div class="player-dropdown-container">
+                            <button class="ctrl-btn dropdown-trigger" id="subtitleSelectorBtn">💬 Subtitles</button>
+                            <div class="player-dropdown-menu" id="subtitleDropdownMenu"></div>
+                        </div>
+                        
+                        <!-- Playback Speed -->
+                        <div class="player-dropdown-container">
+                            <button class="ctrl-btn dropdown-trigger" id="speedSelectorBtn">⚡ Speed</button>
+                            <div class="player-dropdown-menu" id="speedDropdownMenu">
+                                <button class="speed-opt" data-speed="0.5">0.5x</button>
+                                <button class="speed-opt active" data-speed="1.0">1.0x (Normal)</button>
+                                <button class="speed-opt" data-speed="1.25">1.25x</button>
+                                <button class="speed-opt" data-speed="1.5">1.5x</button>
+                                <button class="speed-opt" data-speed="2.0">2.0x</button>
+                            </div>
+                        </div>
+                        
+                        <button class="ctrl-btn" id="theaterModeBtn" title="Theater Mode">
+                            <svg viewBox="0 0 24 24"><path d="M19 12h-2v3h-3v2h5v-5zM7 9h3V7H5v5h2V9zm14-6H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/></svg>
+                        </button>
+                        
+                        <button class="ctrl-btn" id="fullscreenBtn" title="Fullscreen">
+                            <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Episode Countdown Drawer -->
+            <div class="player-next-drawer" id="nextDrawer">
+                <div class="drawer-content">
+                    <h3>Next Episode in <span id="countdownTimer">5</span>s</h3>
+                    <p>Autoplaying S{{ current_season }}E{{ current_episode + 1 if current_episode < total_episodes else 1 }}</p>
+                    
+                    <div class="countdown-circle">
+                        <span class="countdown-num" id="countdownNum">5</span>
+                        <svg class="countdown-svg">
+                            <circle class="countdown-circle-bg" cx="30" cy="30" r="28"></circle>
+                            <circle class="countdown-circle-bar" cx="30" cy="30" r="28"></circle>
+                        </svg>
+                    </div>
+
+                    <div class="drawer-actions">
+                        <button class="drawer-btn" id="cancelNextBtn">Cancel</button>
+                        <button class="drawer-btn primary" id="playNextNowBtn">Play Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="lang-note" id="aud-note">Audio availability depends on the show's available tracks.</div>
-  </div>
-  <div class="lang-divider"></div>
-  <div class="lang-group">
-    <div class="lang-group-title">💬 Subtitles</div>
-    <div class="lang-chips" id="sub-chips">
-      <button class="lchip active-sub" onclick="setSub(this,'off')">Off</button>
-      <button class="lchip"            onclick="setSub(this,'en')">🇬🇧 English</button>
-      <button class="lchip"            onclick="setSub(this,'hi')">🇮🇳 Hindi</button>
-      <button class="lchip"            onclick="setSub(this,'ta')">Tamil</button>
-      <button class="lchip"            onclick="setSub(this,'te')">Telugu</button>
-      <button class="lchip"            onclick="setSub(this,'fr')">🇫🇷 French</button>
-      <button class="lchip"            onclick="setSub(this,'es')">🇪🇸 Spanish</button>
-      <button class="lchip"            onclick="setSub(this,'de')">🇩🇪 German</button>
-      <button class="lchip"            onclick="setSub(this,'ja')">🇯🇵 Japanese</button>
-      <button class="lchip"            onclick="setSub(this,'ko')">🇰🇷 Korean</button>
-      <button class="lchip"            onclick="setSub(this,'ar')">🇸🇦 Arabic</button>
-      <button class="lchip"            onclick="setSub(this,'zh')">🇨🇳 Chinese</button>
-      <button class="lchip"            onclick="setSub(this,'ru')">🇷🇺 Russian</button>
-      <button class="lchip"            onclick="setSub(this,'pt')">Portuguese</button>
+</div>
+
+<!-- SEASONS & EPISODES CHIPS -->
+<div style="padding: 10px 4% 20px;">
+    <h2 class="row-title">📅 Season & Episode Catalog <span>Select to watch</span></h2>
+    <div style="display:flex; flex-direction:column; gap:15px; background: rgba(20,20,20,0.4); border: 1px solid rgba(255,255,255,0.055); padding:20px; border-radius: var(--radius-md); backdrop-filter: blur(10px);">
+        <!-- Season tabs -->
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            {% for s in tv.seasons %}
+                {% if s.season_number > 0 %}
+                    <a href="{{ url_for('tvshows.detail', tv_id=tv.id) }}?season={{ s.season_number }}&episode=1" 
+                       class="srv-btn {% if s.season_number == current_season %}on{% endif %}" style="text-transform:none; border-radius: 20px; padding: 6px 16px;">
+                        Season {{ s.season_number }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        <!-- Episode grid -->
+        <div style="margin-top: 10px;">
+            <div style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
+                Episodes Grid
+            </div>
+            {% if season and season.episodes %}
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap:8px;">
+                    {% for ep in season.episodes %}
+                        <a href="{{ url_for('tvshows.detail', tv_id=tv.id) }}?season={{ current_season }}&episode={{ ep.episode_number }}" 
+                           class="srv-btn {% if ep.episode_number == current_episode %}on{% endif %}" style="padding:10px; text-align:center; font-size:13px; border-radius: 8px;">
+                            Ep {{ ep.episode_number }}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="color:var(--text-muted); font-size:13px;">No episodes loaded. Select a season to load episodes.</div>
+            {% endif %}
+        </div>
     </div>
-    <div class="lang-note">Best subtitle support on Server 1 and 2.</div>
-  </div>
 </div>
 
-<div class="srv-wrap">
-  <div class="srv-tip">💡 Server 1 has best language support. Try others if your language isn't available:</div>
-  <div class="srv-row">
-    <button class="srv-btn on" id="srv1"  onclick="pick(1)">① vidsrc.cc</button>
-    <button class="srv-btn"    id="srv2"  onclick="pick(2)">② vidsrc.me</button>
-    <button class="srv-btn"    id="srv3"  onclick="pick(3)">③ vidsrc.to</button>
-    <button class="srv-btn"    id="srv4"  onclick="pick(4)">④ embed.su</button>
-    <button class="srv-btn"    id="srv5"  onclick="pick(5)">⑤ autoembed</button>
-    <button class="srv-btn"    id="srv6"  onclick="pick(6)">⑥ multiembed</button>
-    <button class="srv-btn"    id="srv7"  onclick="pick(7)">⑦ vidsrc.xyz</button>
-    <button class="srv-btn"    id="srv8"  onclick="pick(8)">⑧ vidlink</button>
-    <button class="srv-btn"    id="srv9"  onclick="pick(9)">⑨ smashystream</button>
-    <button class="srv-btn"    id="srv10" onclick="pick(10)">⑩ 2embed</button>
-  </div>
-</div>
-
-{% if tv.number_of_seasons %}
-<div class="section-title">Seasons</div>
-<div class="season-row">
-  {% for s in range(1, tv.number_of_seasons + 1) %}
-  <a href="{{ url_for('tv_details', id=tv.id, season=s) }}"
-     class="s-tab {{ 'on' if s == current_season else '' }}">S{{ s }}</a>
-  {% endfor %}
+<!-- SIMILAR SUGGESTIONS ROWS -->
+{% if similar %}
+<div class="row" style="padding-bottom:80px;">
+    <h2 class="row-title">🍿 People Also Liked <span>Similar Recommendations</span></h2>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">◀</button>
+        <div class="carousel-track">
+            {% for item in similar %}
+                <div class="card" onclick="window.location.href='{{ url_for('tvshows.detail', tv_id=item.id) }}'">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.name }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    <div class="card-overlay">
+                        <div class="card-title">{{ item.name }}</div>
+                        <div class="card-meta">
+                            <span>{{ (item.first_air_date or '')[:4] }}</span>
+                            <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-btn next">▶</button>
+    </div>
 </div>
 {% endif %}
 
-<div class="section-title">Episodes — Season {{ current_season }}</div>
-<div class="ep-grid">
-{% if season and season.episodes %}
-  {% for ep in season.episodes %}
-  <button class="ep-btn {{ 'on' if loop.index==1 else '' }}" onclick="playEp({{ loop.index }})">
-    Ep {{ loop.index }}
-    {% if ep.name %}<br><small style="opacity:.6;font-size:10px;">{{ ep.name[:18] }}</small>{% endif %}
-  </button>
-  {% endfor %}
-{% else %}
-  {% for i in range(1, 26) %}
-  <button class="ep-btn {{ 'on' if i==1 else '' }}" onclick="playEp({{ i }})">Ep {{ i }}</button>
-  {% endfor %}
-{% endif %}
-</div>
+{% endblock %}
 
-<script>
-var TID  = "{{ tv.id }}";
-var IMDB = "{{ imdb_id }}";
-var SN   = {{ current_season }};
-var cur  = 1, ep = 1;
-var audLang = 'en', subLang = 'off';
-var timer = null;
-
-function buildUrl(n) {
-  var hasSub = subLang !== 'off';
-  var p;
-  if (n===1) {
-    p = [];
-    if (hasSub)           p.push('ds_langs=' + subLang);
-    if (audLang !== 'en') p.push('ds_audio=' + audLang);
-    return 'https://vidsrc.cc/v2/embed/tv/'+TID+'/'+SN+'/'+ep+(p.length?'?'+p.join('&'):'');
-  }
-  if (n===2) {
-    p = 'https://vidsrc.me/embed/tv?tmdb='+TID+'&season='+SN+'&episode='+ep+'&lang='+audLang;
-    if (hasSub) p += '&ds_langs='+subLang;
-    return p;
-  }
-  if (n===3) return 'https://vidsrc.to/embed/tv/'+TID+'/'+SN+'/'+ep+(audLang!=='en'?'?lang='+audLang:'');
-  if (n===4) return 'https://embed.su/embed/tv/'+TID+'/'+SN+'/'+ep;
-  if (n===5) return 'https://player.autoembed.cc/embed/tv/'+TID+'/'+SN+'/'+ep;
-  if (n===6) return 'https://multiembed.mov/?video_id='+TID+'&tmdb=1&s='+SN+'&e='+ep;
-  if (n===7) return 'https://vidsrc.xyz/embed/tv?tmdb='+TID+'&season='+SN+'&episode='+ep;
-  if (n===8) return 'https://vidlink.pro/tv/'+TID+'/'+SN+'/'+ep;
-  if (n===9) return 'https://player.smashy.stream/tv/'+TID+'?s='+SN+'&e='+ep;
-  if (n===10) return 'https://2embed.cc/embedtv/'+(IMDB||TID)+'&s='+SN+'&e='+ep;
-}
-
-var names={1:'vidsrc.cc',2:'vidsrc.me',3:'vidsrc.to',4:'embed.su',5:'autoembed',6:'multiembed',7:'vidsrc.xyz',8:'vidlink',9:'smashystream',10:'2embed'};
-
-function pick(n){
-  cur=n;
-  document.querySelectorAll('.srv-btn').forEach(function(b){b.className='srv-btn';});
-  document.getElementById('srv'+n).className='srv-btn on';
-  document.getElementById('perror').style.display='none';
-  document.getElementById('pstatus').textContent='▶ Loading S'+SN+'E'+ep+' on '+names[n]+'…';
-  document.getElementById('player').src=buildUrl(n);
-  clearTimeout(timer);
-  timer=setTimeout(function(){document.getElementById('perror').style.display='block';},9000);
-}
-function playEp(e){
-  ep=e;
-  document.querySelectorAll('.ep-btn').forEach(function(b,i){b.classList.toggle('on',i+1===e);});
-  pick(cur);
-}
-function setAudio(btn,lang){
-  audLang=lang;
-  document.querySelectorAll('#aud-chips .lchip').forEach(function(b){b.classList.remove('active-audio');});
-  btn.classList.add('active-audio');
-  var note=document.getElementById('aud-note');
-  if(cur>=4){note.textContent='⚠ Switch to Server 1 or 2 for audio language control.';note.style.color='#e5a000';}
-  else{note.textContent='Audio availability depends on the show\'s available tracks.';note.style.color='';}
-  pick(cur);
-}
-function setSub(btn,lang){
-  subLang=lang;
-  document.querySelectorAll('#sub-chips .lchip').forEach(function(b){b.classList.remove('active-sub');});
-  btn.classList.add('active-sub');
-  pick(cur);
-}
-document.getElementById('player').onload=function(){
-  clearTimeout(timer);
-  document.getElementById('perror').style.display='none';
-  var a=document.querySelector('#aud-chips .lchip.active-audio');
-  var s=document.querySelector('#sub-chips .lchip.active-sub');
-  document.getElementById('pstatus').textContent='✅ Playing on '+names[cur]+'  ·  🔊 '+(a?a.textContent.replace(/^.{1,2}\s/,''):'English')+'  ·  💬 '+(s?s.textContent.replace(/^.{1,2}\s/,''):'Off');
-};
-</script>
-</body>
-</html>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/player.js') }}"></script>
+{% endblock %}

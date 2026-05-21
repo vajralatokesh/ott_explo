@@ -1,0 +1,384 @@
+/* ============================================================
+   OTT EXPLORER - MODERN COMPONENTS
+   ============================================================ */
+
+/* ── NAVBAR ─────────────────────────────────────────────── */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: background-color 0.3s ease, padding 0.3s ease;
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.7) 0%, rgba(20, 20, 20, 0) 100%);
+}
+
+.navbar.scrolled {
+  background-color: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(12px);
+  padding: 12px 4%;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.navbar-brand {
+  font-family: var(--font-title);
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(229,9,20,0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-links a {
+  color: #E5E5E5;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.nav-links a:hover, .nav-links a.active {
+  color: #FFFFFF;
+}
+
+.nav-links a.active {
+  font-weight: 700;
+  position: relative;
+}
+
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--primary);
+  border-radius: 1px;
+}
+
+/* Profiles controller in header */
+.profile-menu {
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-trigger img, .profile-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 180px;
+  border-radius: var(--radius-md);
+  padding: 10px;
+  display: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.profile-menu:hover .profile-dropdown {
+  display: block;
+}
+
+.profile-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.profile-dropdown-item:hover {
+  background-color: rgba(255,255,255,0.05);
+  color: #FFFFFF;
+}
+
+/* ── CAROUSEL ROWS ───────────────────────────────────────── */
+.row {
+  padding: 20px 4% 0;
+  position: relative;
+}
+
+.row-title {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row-title span {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.carousel-container {
+  position: relative;
+  overflow: visible;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 10px 0 25px;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+/* Carousel arrows navigation */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 45px;
+  height: calc(100% - 35px);
+  background-color: rgba(20, 20, 20, 0.5);
+  border: none;
+  color: #FFFFFF;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.carousel-container:hover .carousel-btn {
+  opacity: 1;
+}
+
+.carousel-btn:hover {
+  background-color: rgba(20, 20, 20, 0.8);
+  color: var(--primary);
+}
+
+.carousel-btn.prev { left: -4%; border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.carousel-btn.next { right: -4%; border-radius: var(--radius-md) 0 0 var(--radius-md); }
+
+/* ── MOVIE CARDS ─────────────────────────────────────────── */
+.card {
+  flex: 0 0 calc(100% / 7); /* 7 items on large screens */
+  min-width: 140px;
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+  background-color: var(--bg-card);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  cursor: pointer;
+  aspect-ratio: 2/3;
+}
+
+.card:hover {
+  transform: scale(1.08) translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.8), 0 0 15px rgba(229,9,20,0.15);
+  z-index: 50;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Card hover detailed metadata card overlay */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(20,20,20,0.95) 0%, rgba(20,20,20,0.6) 50%, rgba(20,20,20,0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 12px;
+}
+
+.card:hover .card-overlay {
+  opacity: 1;
+}
+
+.card-title {
+  font-family: var(--font-title);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.card-rating {
+  color: var(--gold);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.action-circle-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.action-circle-btn:hover {
+  background-color: #FFFFFF;
+  color: #000000;
+  border-color: #FFFFFF;
+  transform: scale(1.1);
+}
+
+.action-circle-btn.added {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #FFFFFF;
+}
+
+/* Responsive sizes */
+@media (max-width: 1400px) { .card { flex: 0 0 calc(100% / 6); } }
+@media (max-width: 1024px) { .card { flex: 0 0 calc(100% / 5); } }
+@media (max-width: 768px) { 
+  .card { flex: 0 0 calc(100% / 4); } 
+  .navbar { padding: 12px 4%; }
+  .nav-links { display: none; } /* hamburger or bottom tab */
+}
+@media (max-width: 480px) { .card { flex: 0 0 calc(100% / 2.5); } }
+
+/* ── SKELETON LOADING ────────────────────────────────────── */
+.skeleton-card {
+  background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
+  background-size: 200% 100%;
+  animation: loadingShimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+  aspect-ratio: 2/3;
+}
+
+@keyframes loadingShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── MOBILE BOTTOM NAVIGATION ── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: rgba(15, 15, 15, 0.98);
+  backdrop-filter: blur(12px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 1000;
+  justify-content: space-around;
+  align-items: center;
+  padding: 6px 0;
+  box-shadow: 0 -5px 25px rgba(0,0,0,0.8);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  text-decoration: none;
+  gap: 4px;
+  flex: 1;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.mobile-nav-item span:first-child {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.mobile-nav-item:hover, .mobile-nav-item.active {
+  color: #FFFFFF;
+}
+
+.mobile-nav-item.active span:first-child {
+  transform: scale(1.15);
+  text-shadow: 0 0 10px rgba(229, 9, 20, 0.6);
+}
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    display: flex;
+  }
+  body {
+    padding-bottom: 70px !important;
+  }
+}
+

@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Profiles | OTT Explorer{% endblock %}
+
+{% block content %}
+<div class="profile-section">
+    <h1 class="profile-title" id="page-title">Who's watching?</h1>
+    
+    <div class="profile-grid">
+        {% for p in profiles %}
+            {% set avatar_data = (avatars | selectattr("id", "equalto", p.avatar) | first) or avatars[0] %}
+            <div class="profile-card" data-id="{{ p.id }}" data-has-pin="{% if p.pin_hash %}true{% else %}false{% endif %}" onclick="handleProfileClick(this)">
+                <div class="profile-avatar-wrapper">
+                    <div class="profile-avatar-graphic" style="background: {{ avatar_data.gradient }}; display: flex; align-items: center; justify-content: center; color: white; font-size: 40px; font-weight: 800;">
+                        {{ p.name[0]|upper }}
+                    </div>
+                    {% if p.pin_hash %}
+                        <div class="lock-icon">🔒</div>
+                    {% endif %}
+                </div>
+                <div class="profile-name">{{ p.name }}</div>
+                {% if p.is_kids %}
+                    <div style="font-size: 10px; background-color: var(--primary); padding: 2px 6px; border-radius: 10px; margin-top: 4px; font-weight:700;">KIDS</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        {% if profiles|length < 5 %}
+            <!-- Add Profile Card -->
+            <div class="profile-card" onclick="openCreateModal()">
+                <div class="profile-avatar-wrapper" style="border: 2px dashed rgba(255,255,255,0.3); background: transparent; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.4); font-size: 40px;">
+                    +
+                </div>
+                <div class="profile-name" style="color: rgba(255,255,255,0.4);">Add Profile</div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <button class="profile-manage-btn" id="manage-btn" onclick="toggleManageMode()">
+        Manage Profiles
+    </button>
+</div>
+
+<!-- SECURE GLASSMORPHIC PIN MODAL -->
+<div id="pin-modal" class="pin-modal">
+    <div class="pin-modal-content glass-panel glowing-red">
+        <h2 class="pin-profile-name" id="pin-modal-profile-name">Enter Profile PIN</h2>
+        <p style="font-size: 13px; color: var(--text-muted);">This profile is locked with a 4-digit PIN.</p>
+        
+        <div id="pin-error" style="color: #e74c3c; font-size:12px; margin-top:10px; display:none;">⚠ Invalid PIN</div>
+        
+        <input type="hidden" id="pin-profile-id">
+        <div class="pin-inputs-row">
+            <input type="password" maxlength="1" class="pin-digit-box" oninput="movePinFocus(this, 1)" onkeydown="checkPinBackspace(event, 1)">
+            <input type="password" maxlength="1" class="pin-digit-box" oninput="movePinFocus(this, 2)" onkeydown="checkPinBackspace(event, 2)">
+            <input type="password" maxlength="1" class="pin-digit-box" oninput="movePinFocus(this, 3)" onkeydown="checkPinBackspace(event, 3)">
+            <input type="password" maxlength="1" class="pin-digit-box" oninput="movePinFocus(this, 4)" onkeydown="checkPinBackspace(event, 4)">
+        </div>
+        
+        <button class="profile-manage-btn" onclick="closePinModal()" style="margin-top: 10px;">Cancel</button>
+    </div>
+</div>
+
+<!-- CREATE PROFILE MODAL -->
+<div id="create-modal" class="profile-modal">
+    <div class="profile-modal-content glass-panel">
+        <h2 style="font-family:var(--font-title); margin-bottom:20px;">Add Profile</h2>
+        <form action="{{ url_for('main.create_profile') }}" method="POST">
+            <div class="form-group">
+                <label>Profile Name</label>
+                <input type="text" name="name" class="form-input" placeholder="e.g. Lokesh" required autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+                <label>Select Avatar Theme</label>
+                <input type="hidden" name="avatar" id="create-avatar-id" value="avatar_red">
+                <div class="avatar-selector-grid">
+                    {% for av in avatars %}
+                        <div class="avatar-option {% if loop.first %}selected{% endif %}" data-id="{{ av.id }}" style="background: {{ av.gradient }};" onclick="selectAvatarOption('create', this)"></div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" name="is_kids" id="create-kids" style="width:16px; height:16px; accent-color: var(--primary);">
+                <label for="create-kids" style="margin-bottom:0; cursor:pointer;">This is a Kids Profile (G-rated content only)</label>
+            </div>
+            
+            <div class="form-group">
+                <label>Set 4-Digit Lock PIN (Optional)</label>
+                <input type="password" name="pin" class="form-input" placeholder="Leave empty for no PIN" maxlength="4" pattern="\d{4}" style="letter-spacing:4px; font-weight:bold;">
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:30px;">
+                <button type="button" class="profile-manage-btn" onclick="closeCreateModal()">Cancel</button>
+                <button type="submit" class="landing-btn" style="padding:10px 24px; font-size:14px; border-radius: var(--radius-sm);">Save Profile</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div id="edit-modal" class="profile-modal">
+    <div class="profile-modal-content glass-panel">
+        <h2 style="font-family:var(--font-title); margin-bottom:20px;">Edit Profile</h2>
+        <form id="edit-form" method="POST">
+            <div class="form-group">
+                <label>Profile Name</label>
+                <input type="text" name="name" id="edit-name" class="form-input" placeholder="Profile name" required autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+                <label>Select Avatar Theme</label>
+                <input type="hidden" name="avatar" id="edit-avatar-id" value="">
+                <div class="avatar-selector-grid">
+                    {% for av in avatars %}
+                        <div class="avatar-option" data-id="{{ av.id }}" style="background: {{ av.gradient }};" onclick="selectAvatarOption('edit', this)"></div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" name="is_kids" id="edit-kids" style="width:16px; height:16px; accent-color: var(--primary);">
+                <label for="edit-kids" style="margin-bottom:0; cursor:pointer;">Kids Profile (G-rated content only)</label>
+            </div>
+            
+            <div class="form-group">
+                <label>Update Lock PIN (Optional)</label>
+                <input type="password" name="pin" class="form-input" placeholder="Enter 4 digits to update" maxlength="4" pattern="\d{4}" style="letter-spacing:4px; font-weight:bold;">
+                <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                    <input type="checkbox" name="clear_pin" id="edit-clear-pin" style="width:14px; height:14px; accent-color: var(--primary);">
+                    <label for="edit-clear-pin" style="margin-bottom:0; cursor:pointer; font-size:12px;">Completely remove PIN lock</label>
+                </div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:30px; align-items:center;">
+                <button type="button" class="profile-manage-btn" id="delete-btn" style="border-color:var(--primary); color:var(--primary);" onclick="triggerDeleteProfile()">Delete Profile</button>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" class="profile-manage-btn" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="landing-btn" style="padding:10px 24px; font-size:14px; border-radius: var(--radius-sm);">Save</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isManageMode = false;
+let activeProfileTarget = null;
+
+function toggleManageMode() {
+    isManageMode = !isManageMode;
+    const cards = document.querySelectorAll(".profile-card");
+    const title = document.getElementById("page-title");
+    const btn = document.getElementById("manage-btn");
+    
+    cards.forEach(card => {
+        // Skip '+' Add Profile card
+        if (card.querySelector(".profile-avatar-wrapper").textContent.includes("+")) return;
+        card.classList.toggle("manage-mode", isManageMode);
+    });
+    
+    title.textContent = isManageMode ? "Manage Profiles:" : "Who's watching?";
+    btn.textContent = isManageMode ? "Done" : "Manage Profiles";
+    btn.classList.toggle("active", isManageMode);
+}
+
+function handleProfileClick(element) {
+    const profileId = element.dataset.id;
+    const hasPin = element.dataset.hasPin === "true";
+    const profileName = element.querySelector(".profile-name").textContent;
+    
+    if (isManageMode) {
+        openEditModal(profileId, profileName, element);
+    } else {
+        if (hasPin) {
+            openPinModal(profileId, profileName);
+        } else {
+            window.location.href = `/profiles/select/${profileId}`;
+        }
+    }
+}
+
+// PIN Locks Verification AJAX Code
+function openPinModal(profileId, profileName) {
+    document.getElementById("pin-profile-id").value = profileId;
+    document.getElementById("pin-modal-profile-name").textContent = `Enter PIN for ${profileName}`;
+    document.getElementById("pin-error").style.display = "none";
+    
+    const boxes = document.querySelectorAll(".pin-digit-box");
+    boxes.forEach(b => b.value = "");
+    
+    document.getElementById("pin-modal").style.display = "flex";
+    boxes[0].focus();
+}
+
+function closePinModal() {
+    document.getElementById("pin-modal").style.display = "none";
+}
+
+function movePinFocus(input, index) {
+    if (input.value.length === 1 && index < 4) {
+        document.querySelectorAll(".pin-digit-box")[index].focus();
+    } else if (input.value.length === 1 && index === 4) {
+        // Submit Pin verification
+        submitPinVerification();
+    }
+}
+
+function checkPinBackspace(event, index) {
+    if (event.key === "Backspace" && event.target.value.length === 0 && index > 1) {
+        const prev = document.querySelectorAll(".pin-digit-box")[index - 2];
+        prev.focus();
+        prev.value = "";
+    }
+}
+
+function submitPinVerification() {
+    const profileId = document.getElementById("pin-profile-id").value;
+    const boxes = document.querySelectorAll(".pin-digit-box");
+    let pin = "";
+    boxes.forEach(b => pin += b.value);
+    
+    const formData = new FormData();
+    formData.append("profile_id", profileId);
+    formData.append("pin", pin);
+    
+    fetch("/profiles/verify-pin", {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = "/dashboard";
+        } else {
+            document.getElementById("pin-error").style.display = "block";
+            boxes.forEach(b => b.value = "");
+            boxes[0].focus();
+        }
+    });
+}
+
+// Add/Edit Profiles Modal JavaScript Controls
+function openCreateModal() {
+    document.getElementById("create-modal").style.display = "flex";
+}
+function closeCreateModal() {
+    document.getElementById("create-modal").style.display = "none";
+}
+
+let editProfileId = null;
+function openEditModal(id, name, element) {
+    editProfileId = id;
+    document.getElementById("edit-name").value = name;
+    document.getElementById("edit-avatar-id").value = "avatar_red";
+    document.getElementById("edit-kids").checked = element.querySelector("div[style*='background-color: var(--primary)']") !== null;
+    
+    document.getElementById("edit-form").action = `/profiles/edit/${id}`;
+    
+    // Auto select avatar option based on profile background color matching
+    const avatarGraphic = element.querySelector(".profile-avatar-graphic");
+    const matchColor = avatarGraphic.style.background;
+    
+    const options = document.querySelectorAll("#edit-modal .avatar-option");
+    options.forEach(opt => {
+        opt.classList.remove("selected");
+        if (opt.style.background === matchColor) {
+            opt.classList.add("selected");
+            document.getElementById("edit-avatar-id").value = opt.dataset.id;
+        }
+    });
+    
+    document.getElementById("edit-modal").style.display = "flex";
+}
+
+function closeEditModal() {
+    document.getElementById("edit-modal").style.display = "none";
+}
+
+function selectAvatarOption(formType, opt) {
+    const parent = opt.closest(".avatar-selector-grid");
+    parent.querySelectorAll(".avatar-option").forEach(o => o.classList.remove("selected"));
+    opt.classList.add("selected");
+    document.getElementById(`${formType}-avatar-id`).value = opt.dataset.id;
+}
+
+function triggerDeleteProfile() {
+    if (confirm("Are you sure you want to delete this profile? All personalized watchlists and recommendations will be permanently lost.")) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = `/profiles/delete/${editProfileId}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

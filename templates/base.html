@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OTT Explorer{% endblock %}</title>
+    
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom styling sheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
+    
+    <!-- PWA settings -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#E50914">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- STICKY NAVBAR -->
+    <nav class="navbar">
+        {% set show_navbar = false %}
+        {% set display_name = "" %}
+        {% set avatar_letter = "" %}
+        {% if current_profile %}
+            {% set show_navbar = true %}
+            {% set display_name = current_profile.name %}
+            {% set avatar_letter = current_profile.name[0]|upper %}
+        {% endif %}
+
+        <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">
+            🎬 <span style="font-family: 'Bebas Neue', sans-serif; letter-spacing: 1.5px; font-size: 28px;">OTT Explorer</span>
+        </a>
+        
+        {% if show_navbar %}
+        <div class="nav-menu">
+            <div class="nav-links">
+                <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">Home</a>
+                <a href="{{ url_for('tvshows.tvshows_index') }}" class="{% if request.endpoint == 'tvshows.tvshows_index' or request.endpoint == 'tvshows.detail' %}active{% endif %}">TV Shows</a>
+                <a href="{{ url_for('anime.anime_index') }}" class="{% if request.endpoint == 'anime.anime_index' or request.endpoint == 'anime.detail' %}active{% endif %}">Anime</a>
+                <a href="{{ url_for('main.genres_catalog') }}" class="{% if request.endpoint == 'main.genres_catalog' %}active{% endif %}">Categories</a>
+                <a href="{{ url_for('watchlist.index') }}" class="{% if request.endpoint == 'watchlist.index' %}active{% endif %}">My List</a>
+            </div>
+            
+            <!-- Real-time autocomplete search -->
+            <div style="position:relative; margin-right: 15px;">
+                <input type="text" id="search-input" class="form-input" placeholder="🔍 Search movies, TV, anime…" autocomplete="off" style="width:240px; padding: 8px 12px; height: 36px; border-radius: 20px;">
+                <div id="ac-dropdown" class="glass-panel" style="display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; max-height:280px; overflow-y:auto; z-index:9999; border-radius: var(--radius-md);"></div>
+            </div>
+            
+            <!-- Active Profile Dropdown -->
+            <div class="profile-menu">
+                <div class="profile-trigger">
+                    <div class="profile-avatar-small" style="background: var(--avatar-gradient, linear-gradient(135deg, #e50914 0%, #9e060e 100%)); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px;">
+                        {{ avatar_letter }}
+                    </div>
+                    <span style="font-size: 13px; font-weight: 600;">{{ display_name }}</span>
+                    <span style="font-size: 10px;">▼</span>
+                </div>
+                
+                <div class="profile-dropdown glass-panel">
+                    {% if current_profile %}
+                    <a href="{{ url_for('main.profiles') }}" class="profile-dropdown-item">
+                        👥 Switch Profiles
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('main.logout') }}" class="profile-dropdown-item" style="color: var(--primary);">
+                        🚪 Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+
+    <!-- CONTENT WRAPPER -->
+    <div style="min-height: 100vh; padding-top: {% if show_navbar %}70px{% else %}0px{% endif %};">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- MOBILE STICKY BOTTOM NAVIGATION BAR -->
+    {% if show_navbar %}
+    <div class="mobile-nav">
+        <a href="{{ url_for('main.dashboard') }}" class="mobile-nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+            <span>🏠</span>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('tvshows.tvshows_index') }}" class="mobile-nav-item {% if request.endpoint == 'tvshows.tvshows_index' or request.endpoint == 'tvshows.detail' %}active{% endif %}">
+            <span>📺</span>
+            <span>TV Shows</span>
+        </a>
+        <a href="{{ url_for('anime.anime_index') }}" class="mobile-nav-item {% if request.endpoint == 'anime.anime_index' or request.endpoint == 'anime.detail' %}active{% endif %}">
+            <span>🌸</span>
+            <span>Anime</span>
+        </a>
+        <a href="{{ url_for('watchlist.index') }}" class="mobile-nav-item {% if request.endpoint == 'watchlist.index' %}active{% endif %}">
+            <span>❤</span>
+            <span>My List</span>
+        </a>
+        <a href="{{ url_for('main.profiles') }}" class="mobile-nav-item {% if request.endpoint == 'main.profiles' %}active{% endif %}">
+            <span>👥</span>
+            <span>Profiles</span>
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Core interactive modules -->
+    <script src="{{ url_for('static', filename='js/core.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <!-- PWA Service Worker Inline registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/js/sw.js').catch(err => {
+                    console.log('SW registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

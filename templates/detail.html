@@ -1,253 +1,188 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ movie.title }} | OTT Explorer</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<style>
-/* ── NETFLIX-STYLE LANGUAGE PANEL ── */
-.lang-bar{background:#141414;border-top:2px solid #e50914;border-bottom:1px solid #222;padding:14px 24px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;}
-.lang-group{display:flex;flex-direction:column;gap:8px;min-width:0;}
-.lang-group-title{font-size:10px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:5px;}
-.lang-chips{display:flex;flex-wrap:wrap;gap:6px;}
-.lchip{padding:5px 13px;background:#1e1e1e;border:1px solid #333;color:#888;border-radius:30px;cursor:pointer;font-size:12px;transition:.18s;white-space:nowrap;user-select:none;}
-.lchip:hover{background:#282828;color:#ccc;border-color:#555;}
-.lchip.active-audio{background:#0d1a3a;border-color:#3a5bbf;color:#80aaff;font-weight:600;}
-.lchip.active-sub{background:#0d2a0d;border-color:#2d7a2d;color:#70e070;font-weight:600;}
-.lang-divider{width:1px;background:#2a2a2a;margin:0 4px;align-self:stretch;min-height:40px;}
-.lang-note{font-size:11px;color:#555;margin-top:4px;line-height:1.5;max-width:260px;}
-/* srv / player extras */
-.srv-wrap{padding:10px 24px 14px;}
-.srv-tip{font-size:11px;color:#555;margin-bottom:8px;}
-.srv-row{display:flex;flex-wrap:wrap;gap:6px;}
-.srv-btn{padding:6px 13px;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;border-radius:7px;cursor:pointer;font-size:12px;transition:.18s;white-space:nowrap;}
-.srv-btn:hover,.srv-btn.on{background:#e50914;border-color:#e50914;color:#fff;}
-.player-status{padding:5px 24px 4px;font-size:12px;color:#777;min-height:22px;}
-.player-error{background:#1a0000;border:1px solid #550000;border-radius:8px;padding:12px 18px;margin:0 24px 8px;color:#ff8080;font-size:13px;display:none;line-height:1.6;}
-.section-title{padding:14px 24px 6px;font-size:15px;font-weight:700;border-left:4px solid #e50914;}
-@media(max-width:640px){
-  .lang-bar{padding:10px 14px;gap:12px;}
-  .srv-wrap{padding:8px 14px 12px;}
-}
-</style>
-</head>
-<body>
-<nav class="navbar">
-  <a class="navbar-brand" href="{{ url_for('dashboard') }}">🎬 OTT Explorer</a>
-  <button class="hamburger" onclick="document.getElementById('nl').classList.toggle('open')">☰</button>
-  <div class="nav-links" id="nl">
-    <a href="{{ url_for('dashboard') }}" class="nav-active">Movies</a>
-    <a href="{{ url_for('tvshows') }}">TV Shows</a>
-    <a href="{{ url_for('anime') }}">Anime</a>
-    <a href="{{ url_for('watchlist') }}">❤ Watchlist</a>
-    <a href="{{ url_for('logout') }}">Logout</a>
-  </div>
-</nav>
+{% extends "base.html" %}
 
-<div class="hero" style="background-image:linear-gradient(to top,#0b0b0b 18%,rgba(0,0,0,.2)),url('{{ image_orig }}{{ movie.backdrop_path }}');">
-  <h1>{{ movie.title }}</h1>
-</div>
+{% block title %}{{ movie.title }} | OTT Explorer{% endblock %}
 
-<div class="detail-wrap">
-  <img class="d-poster"
-       src="{{ image_base }}{{ movie.poster_path }}"
-       onerror="this.src='https://placehold.co/220x330/111/555?text=No+Poster'">
-  <div class="d-info">
-    <h2>{{ movie.title }}</h2>
-    <p class="overview">{{ movie.overview or 'No description available.' }}</p>
-    <p class="d-rating">⭐ {{ '%.1f'|format(movie.vote_average) if movie.vote_average else 'N/A' }} / 10</p>
-    <p class="d-meta">
-      {% if movie.release_date %}📅 {{ movie.release_date }}{% endif %}
-      {% if movie.runtime %} · ⏱ {{ movie.runtime }} min{% endif %}
-      {% if movie.original_language %} · 🌐 {{ movie.original_language|upper }}{% endif %}
-    </p>
-    {% if movie.genres %}
-    <div class="tag-wrap">{% for g in movie.genres %}<span class="tag">{{ g.name }}</span>{% endfor %}</div>
-    {% endif %}
-    <div class="act-btns">
-      <a href="{{ url_for('add_movie_watchlist', id=movie.id) }}"><button class="btn-ghost">❤ Watchlist</button></a>
-      {% if trailer %}<button class="btn-red" onclick="window.open('https://www.youtube.com/watch?v={{ trailer.key }}','_blank')">▶ Trailer</button>{% endif %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- MEDIA BACKDROP AND DETAILS BANNER -->
+<div class="billboard" style="background-image: url('{{ IMAGE_ORIG }}{{ movie.backdrop_path }}'); height: 60vh;">
+    <div class="billboard-content">
+        <h1 class="billboard-title">{{ movie.title }}</h1>
+        <p style="color:#e50914; font-size:14px; font-weight:700; text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;">
+            {{ movie.tagline or 'Cinematic Spotlight' }}
+        </p>
+        <div class="billboard-meta">
+            <span class="billboard-rating">⭐ {{ '%.1f'|format(movie.vote_average or 0) }}</span>
+            <span>{{ (movie.release_date or '')[:4] }}</span>
+            <span>{{ movie.runtime or 'N/A' }} min</span>
+        </div>
+        <p class="billboard-overview">{{ movie.overview }}</p>
+        
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button class="watchlist-toggle-btn landing-btn {% if in_watchlist %}added{% endif %}"
+                    data-content-id="{{ movie.id }}"
+                    data-content-type="movie"
+                    data-title="{{ movie.title }}"
+                    data-poster="{{ movie.poster_path }}"
+                    style="padding:10px 24px; font-size:14px; border-radius: var(--radius-sm); text-transform:none;">
+                {% if in_watchlist %}✓ Added{% else %}+ Watchlist{% endif %}
+            </button>
+            
+            {% if trailer %}
+                <button class="profile-manage-btn" onclick="openTrailerModal('{{ trailer.key }}')">
+                    🎬 View Trailer
+                </button>
+            {% endif %}
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- PLAYER -->
-<div class="player-wrap">
-  <iframe id="player"
-    src="https://vidsrc.cc/v2/embed/movie/{{ movie.id }}"
-    allowfullscreen allow="autoplay; encrypted-media; fullscreen"></iframe>
-</div>
-<div class="player-status" id="pstatus">▶ Loading on vidsrc.cc…</div>
-<div class="player-error" id="perror">
-  ⚠ <strong>Server doesn't have this movie or language.</strong>
-  Try a different server — each has its own library and language tracks.
-</div>
+<!-- RESPONSIVE EMBEDDED PLAYER WITH CINEMATIC OVERLAY -->
+<div style="padding: 40px 4% 10px;">
+    <h2 class="row-title">▶ Player Stream Showcase <span>Interactive cinematic playback controls</span></h2>
+    <div class="player-wrap main-player-wrapper">
+        <iframe id="player" class="player-iframe" 
+                data-content-id="{{ movie.id }}"
+                data-content-type="movie"
+                data-title="{{ movie.title }}"
+                data-poster="{{ movie.poster_path }}"
+                data-saved-progress="{{ continue_watching.progress if continue_watching else 0 }}"
+                src="https://vidsrc.to/embed/movie/{{ movie.id }}"
+                allowfullscreen allow="autoplay; encrypted-media; fullscreen">
+        </iframe>
 
-<!-- 🌐 NETFLIX-STYLE LANGUAGE PANEL -->
-<div class="lang-bar">
+        <!-- Cinematic Controls Overlay -->
+        <div class="custom-player-overlay" id="playerOverlay">
+            <!-- Top Header -->
+            <div class="player-header">
+                <button class="player-back-btn" onclick="window.location.href='{{ url_for('main.dashboard') }}'" title="Back to Dashboard">
+                    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                </button>
+                <div class="player-title-info">
+                    <span class="player-main-title">{{ movie.title }}</span>
+                    <span class="player-sub-title">{{ movie.tagline or 'Cinematic Spotlight' }}</span>
+                </div>
+            </div>
 
-  <div class="lang-group">
-    <div class="lang-group-title">🔊 Audio Language</div>
-    <div class="lang-chips" id="aud-chips">
-      <button class="lchip active-audio" data-lang="en"  onclick="setAudio(this,'en')">🇬🇧 English</button>
-      <button class="lchip"              data-lang="hi"  onclick="setAudio(this,'hi')">🇮🇳 Hindi</button>
-      <button class="lchip"              data-lang="ta"  onclick="setAudio(this,'ta')">Tamil</button>
-      <button class="lchip"              data-lang="te"  onclick="setAudio(this,'te')">Telugu</button>
-      <button class="lchip"              data-lang="ml"  onclick="setAudio(this,'ml')">Malayalam</button>
-      <button class="lchip"              data-lang="kn"  onclick="setAudio(this,'kn')">Kannada</button>
-      <button class="lchip"              data-lang="mr"  onclick="setAudio(this,'mr')">Marathi</button>
-      <button class="lchip"              data-lang="fr"  onclick="setAudio(this,'fr')">🇫🇷 French</button>
-      <button class="lchip"              data-lang="es"  onclick="setAudio(this,'es')">🇪🇸 Spanish</button>
-      <button class="lchip"              data-lang="de"  onclick="setAudio(this,'de')">🇩🇪 German</button>
-      <button class="lchip"              data-lang="ja"  onclick="setAudio(this,'ja')">🇯🇵 Japanese</button>
-      <button class="lchip"              data-lang="ko"  onclick="setAudio(this,'ko')">🇰🇷 Korean</button>
-      <button class="lchip"              data-lang="zh"  onclick="setAudio(this,'zh')">🇨🇳 Chinese</button>
-      <button class="lchip"              data-lang="pt"  onclick="setAudio(this,'pt')">Portuguese</button>
-      <button class="lchip"              data-lang="ru"  onclick="setAudio(this,'ru')">🇷🇺 Russian</button>
-      <button class="lchip"              data-lang="ar"  onclick="setAudio(this,'ar')">🇸🇦 Arabic</button>
-      <button class="lchip"              data-lang="tr"  onclick="setAudio(this,'tr')">Turkish</button>
+            <!-- Center Area (Transparent) -->
+            <div class="player-center-action">
+                <button class="player-skip-intro-btn hidden" id="skipIntroBtn">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg> Skip Intro
+                </button>
+            </div>
+
+            <!-- Bottom Controls Bar -->
+            <div class="player-controls">
+                <div class="player-progress-container">
+                    <div class="player-progress-bar" id="playerProgressBar"></div>
+                </div>
+                
+                <div class="player-controls-row">
+                    <div class="player-controls-left">
+                        <button class="ctrl-btn" id="playPauseBtn" title="Play/Pause">
+                            <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        
+                        <div class="volume-container">
+                            <button class="ctrl-btn" id="muteBtn" title="Mute">
+                                <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                            </button>
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+                        </div>
+                        
+                        <span class="player-time-display" id="timeDisplay">0:00 / 0:00</span>
+                    </div>
+                    
+                    <div class="player-controls-right">
+                        <!-- Server Selector -->
+                        <div class="player-dropdown-container">
+                            <button class="ctrl-btn dropdown-trigger" id="serverSelectorBtn">⚙ Server</button>
+                            <div class="player-dropdown-menu" id="serverDropdownMenu"></div>
+                        </div>
+                        
+                        <!-- Subtitles Selector -->
+                        <div class="player-dropdown-container">
+                            <button class="ctrl-btn dropdown-trigger" id="subtitleSelectorBtn">💬 Subtitles</button>
+                            <div class="player-dropdown-menu" id="subtitleDropdownMenu"></div>
+                        </div>
+                        
+                        <!-- Playback Speed -->
+                        <div class="player-dropdown-container">
+                            <button class="ctrl-btn dropdown-trigger" id="speedSelectorBtn">⚡ Speed</button>
+                            <div class="player-dropdown-menu" id="speedDropdownMenu">
+                                <button class="speed-opt" data-speed="0.5">0.5x</button>
+                                <button class="speed-opt active" data-speed="1.0">1.0x (Normal)</button>
+                                <button class="speed-opt" data-speed="1.25">1.25x</button>
+                                <button class="speed-opt" data-speed="1.5">1.5x</button>
+                                <button class="speed-opt" data-speed="2.0">2.0x</button>
+                            </div>
+                        </div>
+                        
+                        <button class="ctrl-btn" id="theaterModeBtn" title="Theater Mode">
+                            <svg viewBox="0 0 24 24"><path d="M19 12h-2v3h-3v2h5v-5zM7 9h3V7H5v5h2V9zm14-6H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/></svg>
+                        </button>
+                        
+                        <button class="ctrl-btn" id="fullscreenBtn" title="Fullscreen">
+                            <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="lang-note" id="aud-note">Audio availability depends on what tracks the movie was released with.</div>
-  </div>
+</div>
 
-  <div class="lang-divider"></div>
-
-  <div class="lang-group">
-    <div class="lang-group-title">💬 Subtitles</div>
-    <div class="lang-chips" id="sub-chips">
-      <button class="lchip active-sub"  data-lang="off" onclick="setSub(this,'off')">Off</button>
-      <button class="lchip"             data-lang="en"  onclick="setSub(this,'en')">🇬🇧 English</button>
-      <button class="lchip"             data-lang="hi"  onclick="setSub(this,'hi')">🇮🇳 Hindi</button>
-      <button class="lchip"             data-lang="ta"  onclick="setSub(this,'ta')">Tamil</button>
-      <button class="lchip"             data-lang="te"  onclick="setSub(this,'te')">Telugu</button>
-      <button class="lchip"             data-lang="fr"  onclick="setSub(this,'fr')">🇫🇷 French</button>
-      <button class="lchip"             data-lang="es"  onclick="setSub(this,'es')">🇪🇸 Spanish</button>
-      <button class="lchip"             data-lang="de"  onclick="setSub(this,'de')">🇩🇪 German</button>
-      <button class="lchip"             data-lang="ja"  onclick="setSub(this,'ja')">🇯🇵 Japanese</button>
-      <button class="lchip"             data-lang="ko"  onclick="setSub(this,'ko')">🇰🇷 Korean</button>
-      <button class="lchip"             data-lang="zh"  onclick="setSub(this,'zh')">🇨🇳 Chinese</button>
-      <button class="lchip"             data-lang="ar"  onclick="setSub(this,'ar')">🇸🇦 Arabic</button>
-      <button class="lchip"             data-lang="ru"  onclick="setSub(this,'ru')">🇷🇺 Russian</button>
-      <button class="lchip"             data-lang="pt"  onclick="setSub(this,'pt')">Portuguese</button>
-      <button class="lchip"             data-lang="tr"  onclick="setSub(this,'tr')">Turkish</button>
+<!-- SIMILAR SUGGESTIONS ROWS -->
+{% if similar %}
+<div class="row" style="padding-bottom:80px;">
+    <h2 class="row-title">🍿 People Also Liked <span>Similar Recommendations</span></h2>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">◀</button>
+        <div class="carousel-track">
+            {% for item in similar %}
+                <div class="card" onclick="window.location.href='{{ url_for('movies.detail', movie_id=item.id) }}'">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    <div class="card-overlay">
+                        <div class="card-title">{{ item.title }}</div>
+                        <div class="card-meta">
+                            <span>{{ (item.release_date or '')[:4] }}</span>
+                            <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-btn next">▶</button>
     </div>
-    <div class="lang-note">Subtitles shown inside the player. Use Server 1 or 2 for best subtitle support.</div>
-  </div>
+</div>
+{% endif %}
 
+<!-- TRAILER POPUP MODAL -->
+<div id="trailer-modal" class="profile-modal" onclick="closeTrailerModal()">
+    <div class="profile-modal-content glass-panel" style="max-width:800px; padding:10px; background:#000;" onclick="event.stopPropagation()">
+        <iframe id="trailer-iframe" style="width:100%; height:450px; border:none;" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    </div>
 </div>
 
-<!-- SERVERS -->
-<div class="srv-wrap">
-  <div class="srv-tip">💡 Server 1 has the best language support. If your language isn't playing, try Server 2 or 3:</div>
-  <div class="srv-row">
-    <button class="srv-btn on" id="srv1"  onclick="pick(1)">① vidsrc.cc</button>
-    <button class="srv-btn"    id="srv2"  onclick="pick(2)">② vidsrc.me</button>
-    <button class="srv-btn"    id="srv3"  onclick="pick(3)">③ vidsrc.to</button>
-    <button class="srv-btn"    id="srv4"  onclick="pick(4)">④ embed.su</button>
-    <button class="srv-btn"    id="srv5"  onclick="pick(5)">⑤ autoembed</button>
-    <button class="srv-btn"    id="srv6"  onclick="pick(6)">⑥ multiembed</button>
-    <button class="srv-btn"    id="srv7"  onclick="pick(7)">⑦ vidsrc.xyz</button>
-    <button class="srv-btn"    id="srv8"  onclick="pick(8)">⑧ vidlink</button>
-    <button class="srv-btn"    id="srv9"  onclick="pick(9)">⑨ smashystream</button>
-    <button class="srv-btn"    id="srv10" onclick="pick(10)">⑩ 2embed</button>
-  </div>
-</div>
+{% endblock %}
 
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/player.js') }}"></script>
 <script>
-var MID  = "{{ movie.id }}";
-var IMDB = "{{ imdb_id }}";
-var cur  = 1;
-var audLang = 'en';
-var subLang = 'off';
-var timer   = null;
-
-/* 
-  How language works per server:
-  - Server 1 (vidsrc.cc):  ds_langs=<sub_code>  ds_audio=<audio_code>  ← best support
-  - Server 2 (vidsrc.me):  lang=<audio_code>  ds_langs=<sub_code>
-  - Server 3 (vidsrc.to):  lang=<audio_code>
-  - Server 8 (vidlink):    primaryColor, secondaryColor, iconColor (styling only)
-  - Others:                no reliable lang param — player's own in-player menu works
-*/
-function buildUrl(n) {
-  var hasSub = subLang !== 'off';
-  var p;
-
-  if (n === 1) {
-    p = [];
-    if (hasSub)             p.push('ds_langs=' + subLang);
-    if (audLang !== 'en')   p.push('ds_audio=' + audLang);
-    return 'https://vidsrc.cc/v2/embed/movie/' + MID + (p.length ? '?' + p.join('&') : '');
-  }
-  if (n === 2) {
-    p = 'https://vidsrc.me/embed/movie/' + MID + '?lang=' + audLang;
-    if (hasSub) p += '&ds_langs=' + subLang;
-    return p;
-  }
-  if (n === 3) {
-    return 'https://vidsrc.to/embed/movie/' + MID + (audLang !== 'en' ? '?lang=' + audLang : '');
-  }
-  if (n === 4) return 'https://embed.su/embed/movie/' + MID;
-  if (n === 5) return 'https://player.autoembed.cc/embed/movie/' + MID;
-  if (n === 6) return 'https://multiembed.mov/?video_id=' + MID + '&tmdb=1';
-  if (n === 7) return 'https://vidsrc.xyz/embed/movie?tmdb=' + MID;
-  if (n === 8) return 'https://vidlink.pro/movie/' + MID;
-  if (n === 9) return 'https://player.smashy.stream/movie/' + MID;
-  if (n === 10) return 'https://2embed.cc/embed/' + (IMDB || MID);
+function openTrailerModal(key) {
+    const modal = document.getElementById("trailer-modal");
+    const frame = document.getElementById("trailer-iframe");
+    frame.src = `https://www.youtube.com/embed/${key}?autoplay=1`;
+    modal.style.display = "flex";
 }
-
-var names = {
-  1:'vidsrc.cc', 2:'vidsrc.me', 3:'vidsrc.to', 4:'embed.su',
-  5:'autoembed',  6:'multiembed', 7:'vidsrc.xyz', 8:'vidlink',
-  9:'smashystream', 10:'2embed'
-};
-
-function pick(n) {
-  cur = n;
-  document.querySelectorAll('.srv-btn').forEach(function(b){ b.className='srv-btn'; });
-  document.getElementById('srv'+n).className = 'srv-btn on';
-  document.getElementById('perror').style.display = 'none';
-  document.getElementById('pstatus').textContent  = '▶ Loading on ' + names[n] + '…';
-  document.getElementById('player').src = buildUrl(n);
-  clearTimeout(timer);
-  timer = setTimeout(function(){ document.getElementById('perror').style.display='block'; }, 9000);
+function closeTrailerModal() {
+    const modal = document.getElementById("trailer-modal");
+    const frame = document.getElementById("trailer-iframe");
+    frame.src = "";
+    modal.style.display = "none";
 }
-
-function setAudio(btn, lang) {
-  audLang = lang;
-  document.querySelectorAll('#aud-chips .lchip').forEach(function(b){ b.classList.remove('active-audio'); });
-  btn.classList.add('active-audio');
-
-  // Show tip if server doesn't support lang params
-  var note = document.getElementById('aud-note');
-  if (cur >= 4) {
-    note.textContent = '⚠ Switch to Server 1 or 2 for audio language control.';
-    note.style.color = '#e5a000';
-  } else {
-    note.textContent = 'Audio availability depends on what tracks the movie was released with.';
-    note.style.color = '';
-  }
-  pick(cur);
-}
-
-function setSub(btn, lang) {
-  subLang = lang;
-  document.querySelectorAll('#sub-chips .lchip').forEach(function(b){ b.classList.remove('active-sub'); });
-  btn.classList.add('active-sub');
-  pick(cur);
-}
-
-document.getElementById('player').onload = function() {
-  clearTimeout(timer);
-  document.getElementById('perror').style.display = 'none';
-  var audBtn = document.querySelector('#aud-chips .lchip.active-audio');
-  var subBtn = document.querySelector('#sub-chips .lchip.active-sub');
-  var audTxt = audBtn ? audBtn.textContent.replace(/^.{1,2}\s/,'') : 'English';
-  var subTxt = subBtn ? subBtn.textContent.replace(/^.{1,2}\s/,'') : 'Off';
-  document.getElementById('pstatus').textContent =
-    '✅ Playing on ' + names[cur] + '  ·  🔊 ' + audTxt + '  ·  💬 ' + subTxt;
-};
 </script>
-</body>
-</html>
+{% endblock %}

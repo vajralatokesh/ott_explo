@@ -17,7 +17,7 @@
       <div class="igroup"><label>Password</label><input type="password" name="password" placeholder="Enter your password" required autocomplete="current-password"></div>
       <button class="auth-btn" type="submit">Login</button>
     </form>
-    <div class="auth-switch">No account? <a href="/register">Register here</a></div>
+    <div class="auth-switch">No account? <a href="{{ url_for('register') }}">Register here</a></div>
   </div>
 </div>
 </body>

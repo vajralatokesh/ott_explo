@@ -1,65 +1,163 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Watchlist | OTT Explorer</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-<nav class="navbar">
-  <a class="navbar-brand" href="{{ url_for('dashboard') }}">🎬 OTT Explorer</a>
-  <button class="hamburger" id="ham-btn" onclick="toggleMenu()">☰</button>
-  <div class="nav-links" id="nav-links">
-    <a href="{{ url_for('dashboard') }}">Movies</a>
-    <a href="{{ url_for('tvshows') }}">TV Shows</a>
-    <a href="{{ url_for('anime') }}">Anime</a>
-    <a href="{{ url_for('watchlist') }}" class="nav-active">❤ Watchlist</a>
-    <a href="{{ url_for('logout') }}">Logout</a>
-  </div>
-</nav>
+{% extends "base.html" %}
 
-<div class="results-header">
-  <h2 class="sec-title">❤ My Watchlist</h2>
-  <span class="results-count">{{ items|length }} items</span>
-</div>
+{% block title %}My Watchlist | OTT Explorer{% endblock %}
 
-<div class="wl-grid">
-{% for item in items %}
-<div class="card">
-  {% if item.content_type == "movie" %}
-  <a href="{{ url_for('movie_details', id=item.content_id) }}">
-    <img class="card-img" loading="lazy" src="{{ image_base }}{{ item.poster }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
-  </a>
-  {% elif item.content_type == "tv" %}
-  <a href="{{ url_for('tv_details', id=item.content_id) }}">
-    <img class="card-img" loading="lazy" src="{{ image_base }}{{ item.poster }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
-  </a>
-  {% else %}
-  <a href="{{ url_for('anime_details', id=item.content_id) }}">
-    <img class="card-img" loading="lazy" src="{{ item.poster }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
-  </a>
-  {% endif %}
-  <div class="card-body">
-    <p class="card-title">{{ item.title }}</p>
-    <p class="card-meta" style="text-transform:uppercase;font-size:10px;letter-spacing:.5px;">{{ item.content_type }}</p>
-    <a href="{{ url_for('remove_watchlist', id=item.id) }}">
-      <button class="wl-btn" style="color:#ff6b6b;">🗑 Remove</button>
-    </a>
-  </div>
-</div>
-{% endfor %}
-</div>
+{% block extra_head %}
+<style>
+    .wl-tab-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-muted);
+        padding: 8px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .wl-tab-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #FFFFFF;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    .wl-tab-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #FFFFFF;
+        box-shadow: 0 0 15px rgba(229, 9, 20, 0.4);
+    }
+    .watchlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 20px;
+        padding-bottom: 40px;
+    }
+    @media(max-width: 768px) {
+        .watchlist-grid {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+        }
+    }
+</style>
+{% endblock %}
 
-{% if items|length == 0 %}
-<div class="empty">
-  <div class="empty-icon">❤</div>
-  <h3>Your watchlist is empty</h3>
-  <p>Browse <a href="{{ url_for('dashboard') }}" style="color:#e50914;">Movies</a>,
-     <a href="{{ url_for('tvshows') }}" style="color:#e50914;">TV Shows</a>, or
-     <a href="{{ url_for('anime') }}" style="color:#e50914;">Anime</a> and add to your list</p>
+{% block content %}
+<div class="row" style="padding-top: 20px;">
+    <!-- HEADER & TABS -->
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h2 class="sec-title" style="margin: 0; font-family: var(--font-title); font-size: clamp(24px, 4vw, 32px); font-weight: 800;">
+                    ❤ My List
+                </h2>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0 0;">
+                    Your curated library of cinematic media
+                </p>
+            </div>
+            
+            <!-- Tab switches -->
+            <div class="watchlist-tabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="wl-tab-btn active" onclick="switchWatchlistTab('all', event)">
+                    All ({{ watchlist|length }})
+                </button>
+                <button class="wl-tab-btn" onclick="switchWatchlistTab('movie', event)">
+                    Movies ({{ movies|length }})
+                </button>
+                <button class="wl-tab-btn" onclick="switchWatchlistTab('tv', event)">
+                    TV Shows ({{ tv_shows|length }})
+                </button>
+                <button class="wl-tab-btn" onclick="switchWatchlistTab('anime', event)">
+                    Anime ({{ anime|length }})
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRID WITH ITEMS -->
+    <div class="watchlist-grid">
+        {% for item in watchlist %}
+            <div class="watchlist-card-container card" data-content-type="{{ item.content_type }}" style="aspect-ratio: 2/3;">
+                <!-- Main image link -->
+                <a href="{% if item.content_type == 'movie' %}{{ url_for('movies.detail', movie_id=item.content_id) }}{% elif item.content_type == 'tv' %}{{ url_for('tvshows.detail', tv_id=item.content_id) }}{% else %}{{ url_for('anime.detail', anime_id=item.content_id) }}{% endif %}" style="display:block; width:100%; height:100%;">
+                    {% if item.content_type == "anime" or item.poster.startswith('http') %}
+                        <img class="card-img" src="{{ item.poster }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'" loading="lazy">
+                    {% else %}
+                        <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'" loading="lazy">
+                    {% endif %}
+                </a>
+                
+                <!-- Detailed interactive overlay -->
+                <div class="card-overlay" style="pointer-events: none;">
+                    <div style="pointer-events: auto; display: flex; flex-direction: column; width: 100%;">
+                        <div class="card-title" style="font-size:14px; font-weight:700;">{{ item.title }}</div>
+                        <div class="card-meta" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="text-transform:uppercase; font-size:10px; font-weight:700; letter-spacing:0.5px; background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius:3px;">
+                                {{ item.content_type }}
+                            </span>
+                            
+                            <!-- Watchlist Toggle Button (Removed dynamically) -->
+                            <button class="watchlist-toggle-btn action-circle-btn added"
+                                    data-content-id="{{ item.content_id }}"
+                                    data-content-type="{{ item.content_type }}"
+                                    data-title="{{ item.title }}"
+                                    data-poster="{{ item.poster }}"
+                                    style="width:28px; height:28px; font-size:12px; margin-bottom: 2px;">
+                                ✓
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- EMPTY WATCHLIST STATE -->
+    <div id="wl-empty-state" class="empty-state glass-panel" style="display: {% if watchlist|length == 0 %}flex{% else %}none{% endif %}; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; border-radius: var(--radius-lg); border: 1px dashed rgba(255,255,255,0.1);">
+        <div style="font-size: 64px; color: var(--primary); margin-bottom: 20px; text-shadow: 0 0 15px rgba(229,9,20,0.3);">❤</div>
+        <h3 style="font-family: var(--font-title); font-size: 22px; font-weight: 700; margin-bottom: 10px;">Your Watchlist is empty</h3>
+        <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px; max-width: 400px; line-height: 1.5;">
+            Explore our collections of cinematic movies, series, or top anime shows and bookmark your favorites.
+        </p>
+        <a href="{{ url_for('main.dashboard') }}" class="landing-btn" style="padding: 10px 24px; font-size: 14px; border-radius: var(--radius-sm);">
+            Browse Dashboard
+        </a>
+    </div>
 </div>
-{% endif %}
-<script>function toggleMenu(){ document.getElementById('nav-links').classList.toggle('open'); }</script>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchWatchlistTab(type, event) {
+        // Update active button state
+        const buttons = document.querySelectorAll('.wl-tab-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        // Find clicked button or source event
+        if (event) {
+            event.target.classList.add('active');
+        }
+        
+        // Filter cards
+        const cards = document.querySelectorAll('.watchlist-card-container');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const cardType = card.dataset.contentType;
+            if (type === 'all' || cardType === type) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Toggle empty state
+        const emptyState = document.getElementById('wl-empty-state');
+        if (visibleCount === 0) {
+            emptyState.style.display = 'flex';
+        } else {
+            emptyState.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

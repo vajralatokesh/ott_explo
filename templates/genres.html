@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Genres | OTT Explorer{% endblock %}
+
+{% block extra_head %}
+<style>
+    .genres-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 30px;
+        padding-bottom: 80px;
+        padding-top: 20px;
+    }
+    
+    .genre-card {
+        position: relative;
+        height: 140px;
+        border-radius: var(--radius-md);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 20px;
+        cursor: pointer;
+        overflow: hidden;
+        transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .genre-card:hover {
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: 0 15px 30px rgba(229, 9, 20, 0.3);
+        border-color: rgba(229, 9, 20, 0.4);
+    }
+    
+    .genre-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+        z-index: 1;
+    }
+    
+    .genre-icon {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 36px;
+        opacity: 0.85;
+        z-index: 2;
+        transition: transform 0.4s ease;
+    }
+    
+    .genre-card:hover .genre-icon {
+        transform: rotate(15deg) scale(1.1);
+    }
+    
+    .genre-name {
+        font-family: var(--font-title);
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #fff;
+        z-index: 2;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="padding-top: 30px;">
+    <!-- Genres Header -->
+    <div style="margin-bottom: 40px; border-left: 5px solid var(--primary); padding-left: 20px;">
+        <h1 style="font-family: var(--font-title); font-size: clamp(28px, 5vw, 42px); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin: 0; display: flex; align-items: center; gap: 15px;">
+            🎭 Categories
+        </h1>
+        <p style="color: var(--text-muted); font-size: 15px; margin: 8px 0 0 0; font-family: 'Poppins', sans-serif;">
+            Browse movies and TV shows sorted by genres and curated lists.
+        </p>
+    </div>
+
+    <!-- Curated Lists Shortcuts -->
+    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 40px;">
+        <a href="{{ url_for('main.trending_catalog') }}" class="landing-btn" style="text-decoration:none; padding:12px 24px; font-size:14px; display:flex; align-items:center; gap:8px; border-radius: var(--radius-sm);">
+            🔥 Trending Now
+        </a>
+        <a href="{{ url_for('main.top_rated_catalog') }}" class="landing-btn" style="text-decoration:none; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:12px 24px; font-size:14px; display:flex; align-items:center; gap:8px; border-radius: var(--radius-sm);">
+            ⭐ Top Rated
+        </a>
+        <a href="{{ url_for('main.new_releases_catalog') }}" class="landing-btn" style="text-decoration:none; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:12px 24px; font-size:14px; display:flex; align-items:center; gap:8px; border-radius: var(--radius-sm);">
+            📅 New Releases
+        </a>
+    </div>
+
+    <!-- Genres Grid -->
+    <div class="genres-grid">
+        {% for g in genres %}
+            <div class="genre-card" style="background: {{ g.gradient }};" onclick="window.location.href='{{ url_for('main.genres_catalog', genre=g.id) }}'">
+                <div class="genre-icon">{{ g.icon }}</div>
+                <div class="genre-name">{{ g.name }}</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

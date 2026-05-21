@@ -1,0 +1,22 @@
+{
+  "name": "OTT Explorer - Netflix Stream",
+  "short_name": "OTT Explorer",
+  "description": "Premium cinematic streaming platform for movies, TV series, and anime.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#E50914",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/e50914/ffffff?text=OTT",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://placehold.co/512x512/e50914/ffffff?text=OTT+Explorer",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

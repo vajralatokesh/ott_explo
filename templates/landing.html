@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome | OTT Explorer{% endblock %}
+
+{% block content %}
+<div class="landing-hero">
+    {% if background_movie %}
+        <div class="landing-backdrop" style="background-image: url('{{ IMAGE_ORIG }}{{ background_movie.backdrop_path }}');"></div>
+    {% else %}
+        <div class="landing-backdrop" style="background-image: url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925');"></div>
+    {% endif %}
+    
+    <div class="landing-content">
+        <h1 class="landing-title">Movies, Anime, and TV Shows Unlimited.</h1>
+        <p class="landing-subtitle">Watch anywhere. Cancel anytime. Select your cinematic profile to start streaming instantly.</p>
+        
+        <a href="{{ url_for('main.profiles') }}" class="landing-btn">
+            Get Started <span style="font-size:22px;">➔</span>
+        </a>
+    </div>
+</div>
+
+<!-- Extra cinematic highlights row -->
+<div class="row" style="margin-top: -100px; z-index: 100; position: relative; padding-bottom: 60px;">
+    <h2 class="row-title">🔥 Trending Global Cinema</h2>
+    <div class="carousel-container">
+        <div class="carousel-track">
+            {% for item in trending %}
+                <div class="card" onclick="window.location.href='{{ url_for('main.profiles') }}'">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    <div class="card-overlay">
+                        <div class="card-title">{{ item.title or item.name }}</div>
+                        <div class="card-meta">
+                            <span>{{ (item.release_date or item.first_air_date or '')[:4] }}</span>
+                            <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
