@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | OTT Explorer{% endblock %}
+
+{% block extra_head %}
+<style>
+    .catalog-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 25px;
+        padding-bottom: 80px;
+    }
+    @media(max-width: 768px) {
+        .catalog-grid {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="padding-top: 30px;">
+    <!-- Catalog Header -->
+    <div style="margin-bottom: 40px; border-left: 5px solid var(--primary); padding-left: 20px;">
+        <h1 style="font-family: var(--font-title); font-size: clamp(28px, 5vw, 42px); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin: 0; display: flex; align-items: center; gap: 15px;">
+            {{ icon }} {{ title }}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 15px; margin: 8px 0 0 0; font-family: 'Poppins', sans-serif;">
+            {{ description }}
+        </p>
+    </div>
+
+    <!-- Catalog Grid -->
+    {% if items %}
+        <div class="catalog-grid">
+            {% for item in items %}
+                {% set is_movie = item.title is defined %}
+                {% set item_url = url_for('movies.detail', movie_id=item.id) if is_movie else url_for('tvshows.detail', tv_id=item.id) %}
+                <div class="card" onclick="window.location.href='{{ item_url }}'">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.title or item.name }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    <div class="card-overlay">
+                        <div class="card-title">{{ item.title or item.name }}</div>
+                        <div class="card-meta">
+                            <span>{{ (item.release_date or item.first_air_date or '')[:4] }}</span>
+                            <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 100px 20px; font-family: 'Poppins', sans-serif;">
+            <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.4;">🎬</div>
+            <h3 style="color: #fff; font-size: 20px; font-weight: 600; margin-bottom: 8px;">No content found</h3>
+            <p style="color: var(--text-muted); font-size: 14px;">Please try checking another category or try later.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ott_explorer_app
+    ports:
+      - "10000:10000"
+    environment:
+      - SECRET_KEY=dev-secret-compose-key
+      - DATABASE_URL=sqlite:///../instance/database.db
+      - FLASK_ENV=development
+      - TMDB_API_KEY=b8a45c0e4399cb242e0c6a486ca2542c
+    volumes:
+      - ./instance:/app/instance
+    restart: unless-stopped

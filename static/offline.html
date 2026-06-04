@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline | OTT Explorer</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/pages.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .offline-box {
+            max-width: 450px;
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: var(--primary);
+            font-size: 28px;
+            margin-bottom: 12px;
+            font-family: var(--font-title);
+        }
+        p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-box">
+        <h1>🎬 You are Offline</h1>
+        <p>It looks like your internet connection is down. Don't worry! Connect back to the network to continue streaming your favorite movies, TV shows, and anime.</p>
+        <button class="landing-btn" onclick="window.location.reload()">Retry Connection</button>
+    </div>
+</body>
+</html>

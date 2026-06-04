@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Home | OTT Explorer{% endblock %}
+
+{% block content %}
+
+<!-- CINEMATIC BILLBOARD HERO -->
+{% if hero %}
+<div class="billboard" style="background-image: url('{{ IMAGE_ORIG }}{{ hero.backdrop_path }}');">
+    <div class="billboard-content">
+        <h1 class="billboard-title">{{ hero.title or hero.name }}</h1>
+        <div class="billboard-meta">
+            <span class="billboard-rating">⭐ {{ '%.1f'|format(hero.vote_average) }}</span>
+            <span>{{ (hero.release_date or hero.first_air_date or '')[:4] }}</span>
+            <span style="border:1px solid #777; padding: 1px 6px; font-size:11px; border-radius:3px; text-transform:uppercase;">
+                {{ hero.media_type or 'movie' }}
+            </span>
+        </div>
+        <p class="billboard-overview">{{ hero.overview }}</p>
+        
+        <div style="display:flex; gap:12px; align-items:center;">
+            <a href="{% if hero.media_type == 'tv' %}{{ url_for('tvshows.detail', tv_id=hero.id) }}{% else %}{{ url_for('movies.detail', movie_id=hero.id) }}{% endif %}" class="landing-btn" style="padding: 12px 28px; font-size:15px; border-radius: var(--radius-sm);">
+                ▶ Play Stream
+            </a>
+            
+            <button class="watchlist-toggle-btn action-circle-btn {% if watchlist | selectattr('content_id', 'equalto', hero.id|string) | list | length > 0 %}added{% endif %}"
+                    data-content-id="{{ hero.id }}"
+                    data-content-type="{{ hero.media_type or 'movie' }}"
+                    data-title="{{ hero.title or hero.name }}"
+                    data-poster="{{ hero.poster_path }}"
+                    style="width: 44px; height: 44px; font-size: 18px;">
+                {% if watchlist | selectattr('content_id', 'equalto', hero.id|string) | list | length > 0 %}✓{% else %}+{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- CAROUSEL ROWS COLLECTION -->
+
+
+
+<!-- Continue Watching section removed cleanly -->
+
+<!-- 2. AI recommendations list -->
+{% if ai_recs %}
+<div class="row">
+    <h2 class="row-title">⭐ Top Picks for {{ current_profile.name }} <span>AI Personalized</span></h2>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">◀</button>
+        <div class="carousel-track">
+            {% for rec in ai_recs %}
+                <div class="card" onclick="window.location.href='{% if rec.content_type == 'movie' %}{{ url_for('movies.detail', movie_id=rec.id) }}{% elif rec.content_type == 'tv' %}{{ url_for('tvshows.detail', tv_id=rec.id) }}{% else %}{{ url_for('anime.detail', anime_id=rec.id) }}{% endif %}'">
+                    {% if rec.content_type == 'anime' or rec.poster.startswith('http') %}
+                        <img class="card-img" src="{{ rec.poster }}" alt="{{ rec.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    {% else %}
+                        <img class="card-img" src="{{ IMAGE_BASE }}{{ rec.poster }}" alt="{{ rec.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    {% endif %}
+                    
+                    <div class="card-overlay">
+                        <div class="card-title">{{ rec.title }}</div>
+                        <p style="font-size: 9px; color: var(--primary); font-weight:700; margin-bottom:4px; text-transform:uppercase;">
+                            {{ rec.reason }}
+                        </p>
+                        <div class="card-meta">
+                            <span style="text-transform:uppercase; font-size:10px;">{{ rec.content_type }}</span>
+                            <span class="card-rating">⭐ {{ '%.1f'|format(rec.rating) }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-btn next">▶</button>
+    </div>
+</div>
+{% endif %}
+
+<!-- 3. Watchlist Row (My List) -->
+{% if watchlist %}
+<div class="row">
+    <h2 class="row-title">❤ My List <span>Your saved movies and anime</span></h2>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">◀</button>
+        <div class="carousel-track">
+            {% for item in watchlist %}
+                <div class="card" onclick="window.location.href='{% if item.content_type == 'movie' %}{{ url_for('movies.detail', movie_id=item.content_id) }}{% elif item.content_type == 'tv' %}{{ url_for('tvshows.detail', tv_id=item.content_id) }}{% else %}{{ url_for('anime.detail', anime_id=item.content_id) }}{% endif %}'">
+                    {% if item.content_type == "anime" or item.poster.startswith('http') %}
+                        <img class="card-img" src="{{ item.poster }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    {% else %}
+                        <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    {% endif %}
+                    <div class="card-overlay">
+                        <div class="card-title">{{ item.title }}</div>
+                        <div class="card-meta">
+                            <span style="text-transform:uppercase; font-size:10px;">{{ item.content_type }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-btn next">▶</button>
+    </div>
+</div>
+{% endif %}
+
+<!-- 4. Trending Catalog -->
+<div class="row">
+    <h2 class="row-title">🔥 Trending Hits <span>Top cinematic shows right now</span></h2>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">◀</button>
+        <div class="carousel-track">
+            {% for item in trending %}
+                <div class="card" onclick="window.location.href='{% if item.media_type == 'tv' %}{{ url_for('tvshows.detail', tv_id=item.id) }}{% else %}{{ url_for('movies.detail', movie_id=item.id) }}{% endif %}'">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    <div class="card-overlay">
+                        <div class="card-title">{{ item.title or item.name }}</div>
+                        <div class="card-meta">
+                            <span>{{ (item.release_date or item.first_air_date or '')[:4] }}</span>
+                            <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-btn next">▶</button>
+    </div>
+</div>
+
+<!-- 5. Popular Movies -->
+<div class="row">
+    <h2 class="row-title">🎬 Blockbuster Movies <span>Popular highlights</span></h2>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">◀</button>
+        <div class="carousel-track">
+            {% for item in popular_movies %}
+                <div class="card" onclick="window.location.href='{{ url_for('movies.detail', movie_id=item.id) }}'">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    <div class="card-overlay">
+                        <div class="card-title">{{ item.title }}</div>
+                        <div class="card-meta">
+                            <span>{{ (item.release_date or '')[:4] }}</span>
+                            <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-btn next">▶</button>
+    </div>
+</div>
+
+<!-- 6. Popular TV Shows -->
+<div class="row">
+    <h2 class="row-title">📺 Binge TV Series <span>Highly Popular TV</span></h2>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">◀</button>
+        <div class="carousel-track">
+            {% for item in popular_tv %}
+                <div class="card" onclick="window.location.href='{{ url_for('tvshows.detail', tv_id=item.id) }}'">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.name }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    <div class="card-overlay">
+                        <div class="card-title">{{ item.name }}</div>
+                        <div class="card-meta">
+                            <span>{{ (item.first_air_date or '')[:4] }}</span>
+                            <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-btn next">▶</button>
+    </div>
+</div>
+
+<!-- 7. Anime Row -->
+<div class="row" style="padding-bottom: 80px;">
+    <h2 class="row-title">🎌 Crunchyroll Anime <span>Airing & Top Ranked</span></h2>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">◀</button>
+        <div class="carousel-track">
+            {% for a in anime %}
+                <div class="card" onclick="window.location.href='{{ url_for('anime.detail', anime_id=a.mal_id) }}'">
+                    <img class="card-img" src="{{ a.images.jpg.large_image_url if a.images and a.images.jpg else 'https://placehold.co/300x450/111/555?text=No+Poster' }}" alt="{{ a.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'">
+                    <div class="card-overlay">
+                        <div class="card-title">{{ a.title }}</div>
+                        <div class="card-meta">
+                            <span>{{ a.year or '' }}</span>
+                            <span class="card-rating">⭐ {{ a.score or 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-btn next">▶</button>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results for "{{ query }}" | OTT Explorer{% endblock %}
+
+{% block extra_head %}
+<style>
+    .search-filter-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-muted);
+        padding: 8px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .search-filter-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #FFFFFF;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    .search-filter-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #FFFFFF;
+        box-shadow: 0 0 15px rgba(229, 9, 20, 0.4);
+    }
+    .search-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 20px;
+        padding-bottom: 40px;
+    }
+    @media(max-width: 768px) {
+        .search-grid {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="padding-top: 20px;">
+    <!-- SEARCH HEADER -->
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h2 class="sec-title" style="margin: 0; font-family: var(--font-title); font-size: clamp(24px, 4vw, 32px); font-weight: 800;">
+                    🔍 Search Results
+                </h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin: 4px 0 0 0;">
+                    Showing results for <span style="color:#FFFFFF; font-weight:700;">"{{ query }}"</span>
+                </p>
+            </div>
+            
+            <!-- Type Filters -->
+            {% set total_results = (movies|length) + (tv_shows|length) + (anime|length) %}
+            {% if total_results > 0 %}
+            <div class="search-filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="search-filter-btn active" onclick="filterSearchType('all', event)">
+                    All ({{ total_results }})
+                </button>
+                <button class="search-filter-btn" onclick="filterSearchType('movie', event)">
+                    Movies ({{ movies|length }})
+                </button>
+                <button class="search-filter-btn" onclick="filterSearchType('tv', event)">
+                    TV Shows ({{ tv_shows|length }})
+                </button>
+                <button class="search-filter-btn" onclick="filterSearchType('anime', event)">
+                    Anime ({{ anime|length }})
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MAIN RESULTS GRID -->
+    {% if total_results > 0 %}
+    <div class="search-grid">
+        <!-- 1. Movies -->
+        {% for item in movies %}
+            {% set in_wl = watchlist | selectattr('content_id', 'equalto', item.id|string) | selectattr('content_type', 'equalto', 'movie') | list | length > 0 %}
+            <div class="search-result-card card" data-content-type="movie" style="aspect-ratio: 2/3;">
+                <a href="{{ url_for('movies.detail', movie_id=item.id) }}" style="display:block; width:100%; height:100%;">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'" loading="lazy">
+                </a>
+                
+                <div class="card-overlay" style="pointer-events: none;">
+                    <div style="pointer-events: auto; display: flex; flex-direction: column; width: 100%;">
+                        <div class="card-title">{{ item.title }}</div>
+                        <div class="card-meta" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average) if item.vote_average else 'N/A' }}</span>
+                                <span style="font-size:10px; font-weight:600; text-transform:uppercase; background:rgba(255,255,255,0.1); padding: 1px 4px; border-radius:2px;">Movie</span>
+                            </div>
+                            
+                            <button class="watchlist-toggle-btn action-circle-btn {% if in_wl %}added{% endif %}"
+                                    data-content-id="{{ item.id }}"
+                                    data-content-type="movie"
+                                    data-title="{{ item.title }}"
+                                    data-poster="{{ item.poster_path }}"
+                                    style="width:28px; height:28px; font-size:12px;">
+                                {% if in_wl %}✓{% else %}+{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- 2. TV Shows -->
+        {% for item in tv_shows %}
+            {% set in_wl = watchlist | selectattr('content_id', 'equalto', item.id|string) | selectattr('content_type', 'equalto', 'tv') | list | length > 0 %}
+            <div class="search-result-card card" data-content-type="tv" style="aspect-ratio: 2/3;">
+                <a href="{{ url_for('tvshows.detail', tv_id=item.id) }}" style="display:block; width:100%; height:100%;">
+                    <img class="card-img" src="{{ IMAGE_BASE }}{{ item.poster_path }}" alt="{{ item.name }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'" loading="lazy">
+                </a>
+                
+                <div class="card-overlay" style="pointer-events: none;">
+                    <div style="pointer-events: auto; display: flex; flex-direction: column; width: 100%;">
+                        <div class="card-title">{{ item.name }}</div>
+                        <div class="card-meta" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span class="card-rating">⭐ {{ '%.1f'|format(item.vote_average) if item.vote_average else 'N/A' }}</span>
+                                <span style="font-size:10px; font-weight:600; text-transform:uppercase; background:rgba(255,255,255,0.1); padding: 1px 4px; border-radius:2px;">TV</span>
+                            </div>
+                            
+                            <button class="watchlist-toggle-btn action-circle-btn {% if in_wl %}added{% endif %}"
+                                    data-content-id="{{ item.id }}"
+                                    data-content-type="tv"
+                                    data-title="{{ item.name }}"
+                                    data-poster="{{ item.poster_path }}"
+                                    style="width:28px; height:28px; font-size:12px;">
+                                {% if in_wl %}✓{% else %}+{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- 3. Anime -->
+        {% for item in anime %}
+            {% set in_wl = watchlist | selectattr('content_id', 'equalto', item.mal_id|string) | selectattr('content_type', 'equalto', 'anime') | list | length > 0 %}
+            {% set poster_url = item.images.jpg.image_url if item.images else '' %}
+            <div class="search-result-card card" data-content-type="anime" style="aspect-ratio: 2/3;">
+                <a href="{{ url_for('anime.detail', anime_id=item.mal_id) }}" style="display:block; width:100%; height:100%;">
+                    <img class="card-img" src="{{ poster_url }}" alt="{{ item.title }}" onerror="this.src='https://placehold.co/300x450/111/555?text=No+Poster'" loading="lazy">
+                </a>
+                
+                <div class="card-overlay" style="pointer-events: none;">
+                    <div style="pointer-events: auto; display: flex; flex-direction: column; width: 100%;">
+                        <div class="card-title">{{ item.title }}</div>
+                        <div class="card-meta" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span class="card-rating">⭐ {{ '%.1f'|format(item.score) if item.score else 'N/A' }}</span>
+                                <span style="font-size:10px; font-weight:600; text-transform:uppercase; background:rgba(255,255,255,0.1); padding: 1px 4px; border-radius:2px;">Anime</span>
+                            </div>
+                            
+                            <button class="watchlist-toggle-btn action-circle-btn {% if in_wl %}added{% endif %}"
+                                    data-content-id="{{ item.mal_id }}"
+                                    data-content-type="anime"
+                                    data-title="{{ item.title }}"
+                                    data-poster="{{ poster_url }}"
+                                    style="width:28px; height:28px; font-size:12px;">
+                                {% if in_wl %}✓{% else %}+{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- EMPTY / NO RESULTS STATE -->
+    <div id="search-empty-state" class="empty-state glass-panel" style="display: {% if total_results == 0 %}flex{% else %}none{% endif %}; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; border-radius: var(--radius-lg); border: 1px dashed rgba(255,255,255,0.1);">
+        <div style="font-size: 64px; color: var(--primary); margin-bottom: 20px; text-shadow: 0 0 15px rgba(229,9,20,0.3);">🔍</div>
+        <h3 style="font-family: var(--font-title); font-size: 22px; font-weight: 700; margin-bottom: 10px;">No results found</h3>
+        <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px; max-width: 400px; line-height: 1.5;">
+            We couldn't find any matches for <span style="color:#ffffff;">"{{ query }}"</span>. Please check the spelling or try searching for another term.
+        </p>
+        <a href="{{ url_for('main.dashboard') }}" class="landing-btn" style="padding: 10px 24px; font-size: 14px; border-radius: var(--radius-sm);">
+            Back to Home
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function filterSearchType(type, event) {
+        // Update active filter button state
+        const buttons = document.querySelectorAll('.search-filter-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        if (event) {
+            event.target.classList.add('active');
+        }
+        
+        // Filter result cards
+        const cards = document.querySelectorAll('.search-result-card');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const cardType = card.dataset.contentType;
+            if (type === 'all' || cardType === type) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Toggle empty state if no results match this filter
+        const emptyState = document.getElementById('search-empty-state');
+        if (visibleCount === 0) {
+            emptyState.style.display = 'flex';
+        } else {
+            emptyState.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

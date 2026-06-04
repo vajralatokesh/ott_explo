@@ -1,0 +1,150 @@
+/* ── LANGUAGE / AUDIO PANEL ──────────────────────────────── */
+.lang-panel{
+  background:#111;border-bottom:1px solid #222;
+  padding:10px 24px 12px;display:flex;flex-wrap:wrap;
+  gap:16px;align-items:flex-start;
+}
+.lang-group{display:flex;flex-direction:column;gap:6px;}
+.lang-group label{
+  font-size:11px;color:#666;font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.lang-btns{display:flex;flex-wrap:wrap;gap:6px;}
+.lang-btn{
+  padding:6px 14px;background:#1a1a1a;
+  border:1px solid #2a2a2a;color:#999;
+  border-radius:20px;cursor:pointer;font-size:12px;
+  transition:.15s;white-space:nowrap;
+}
+.lang-btn:hover{background:#2a2a2a;color:#ccc;border-color:#444;}
+.lang-btn.on{background:#1a3a1a;border-color:#2d6b2d;color:#7fff7f;}
+.lang-btn.on.audio{background:#1a1a3a;border-color:#3a3a8a;color:#aaaaff;}
+.lang-divider{width:1px;background:#222;margin:0 4px;align-self:stretch;}
+.sub-select{
+  padding:6px 10px;background:#1a1a1a;
+  border:1px solid #2a2a2a;border-radius:20px;
+  color:#999;font-size:12px;cursor:pointer;outline:none;
+}
+.sub-select:focus{border-color:#555;}
+@media(max-width:640px){
+  .lang-panel{padding:8px 14px 10px;gap:10px;}
+}
+
+
+/* Mobile responsiveness improvements */
+@media (max-width: 768px){
+  .container, .content, .hero, .hero-content {width:100% !important; max-width:100% !important;}
+  .movie-card, .card {min-width:160px !important;}
+  h1 {font-size:2rem !important;}
+  h2 {font-size:1.5rem !important;}
+  h3, .title {font-size:1.2rem !important;}
+  p, span, a, button, input {font-size:16px !important;}
+}
+
+/* Larger search suggestions */
+.search-suggestions,
+.autocomplete,
+.search-dropdown{
+    font-size:18px !important;
+    line-height:1.7 !important;
+}
+
+.search-suggestions li,
+.autocomplete li,
+.search-dropdown li{
+    padding:12px !important;
+}
+
+/* Better readability */
+body{
+    font-size:17px !important;
+}
+
+button{
+    font-size:16px !important;
+}
+
+input[type="text"], input[type="search"]{
+    font-size:18px !important;
+}
+
+
+/* ===== PREMIUM GOLD + BLACK THEME ===== */
+:root{
+  --gold:#D4AF37;
+  --gold-light:#F5D76E;
+  --bg:#0b0b0b;
+  --card:#151515;
+}
+
+body{
+  background: linear-gradient(180deg,#000,#0b0b0b,#111) !important;
+  color:#f5f5f5 !important;
+}
+
+.navbar,.header,.topbar{
+  background: rgba(0,0,0,.92) !important;
+  border-bottom:1px solid rgba(212,175,55,.25) !important;
+  backdrop-filter: blur(10px);
+}
+
+button,.btn{
+  background: linear-gradient(135deg,var(--gold),var(--gold-light)) !important;
+  color:#000 !important;
+  border:none !important;
+  font-weight:700 !important;
+  border-radius:10px !important;
+}
+
+.movie-card,.card,.content-card{
+  background: var(--card) !important;
+  border:1px solid rgba(212,175,55,.15) !important;
+  border-radius:16px !important;
+  transition:all .25s ease !important;
+}
+
+.movie-card:hover,.card:hover,.content-card:hover{
+  transform: translateY(-6px) scale(1.02) !important;
+  box-shadow:0 10px 30px rgba(212,175,55,.25) !important;
+}
+
+h1,h2,h3,h4,.logo{
+  color:var(--gold-light) !important;
+}
+
+input,select{
+  border:1px solid rgba(212,175,55,.4) !important;
+  border-radius:12px !important;
+}
+
+::-webkit-scrollbar{height:10px;width:10px;}
+::-webkit-scrollbar-thumb{
+  background:var(--gold);
+  border-radius:10px;
+}
+
+.hero,.banner{
+  border-radius:20px !important;
+  overflow:hidden !important;
+}
+
+.search-suggestions,.autocomplete,.search-dropdown{
+  background:#151515 !important;
+  border:1px solid rgba(212,175,55,.3) !important;
+  font-size:18px !important;
+}
+
+/* Mobile search improvements */
+.mobile-search-btn{
+ position:fixed; bottom:20px; right:20px; z-index:9999;
+ background:#D4AF37; color:#000; border-radius:50px;
+ padding:12px 18px; font-weight:bold;
+ box-shadow:0 4px 20px rgba(212,175,55,.4);
+}
+.search-suggestions,.autocomplete,.search-dropdown{
+ font-size:20px !important;
+ max-height:350px; overflow-y:auto;
+}
+.search-suggestions div,.autocomplete li,.search-dropdown li{
+ padding:14px !important;
+}

@@ -1,0 +1,202 @@
+/* ============================================================
+   TOAST NOTIFICATION STYLES
+   ============================================================ */
+.toast-container {
+  position: fixed;
+  bottom: 25px;
+  left: 25px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 380px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #FFFFFF;
+  animation: slideInLeft 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  border-left: 4px solid var(--primary);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.toast.toast-success {
+  border-left: 4px solid #2ecc71;
+}
+
+.toast.toast-error {
+  border-left: 4px solid #e74c3c;
+}
+
+.toast.toast-warning {
+  border-left: 4px solid #f1c40f;
+}
+
+.toast.toast-info {
+  border-left: 4px solid #3498db;
+}
+
+.toast-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-message {
+  flex: 1;
+}
+
+.toast-close {
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  font-size: 14px;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+
+/* Mobile responsiveness improvements */
+@media (max-width: 768px){
+  .container, .content, .hero, .hero-content {width:100% !important; max-width:100% !important;}
+  .movie-card, .card {min-width:160px !important;}
+  h1 {font-size:2rem !important;}
+  h2 {font-size:1.5rem !important;}
+  h3, .title {font-size:1.2rem !important;}
+  p, span, a, button, input {font-size:16px !important;}
+}
+
+/* Larger search suggestions */
+.search-suggestions,
+.autocomplete,
+.search-dropdown{
+    font-size:18px !important;
+    line-height:1.7 !important;
+}
+
+.search-suggestions li,
+.autocomplete li,
+.search-dropdown li{
+    padding:12px !important;
+}
+
+/* Better readability */
+body{
+    font-size:17px !important;
+}
+
+button{
+    font-size:16px !important;
+}
+
+input[type="text"], input[type="search"]{
+    font-size:18px !important;
+}
+
+
+/* ===== PREMIUM GOLD + BLACK THEME ===== */
+:root{
+  --gold:#D4AF37;
+  --gold-light:#F5D76E;
+  --bg:#0b0b0b;
+  --card:#151515;
+}
+
+body{
+  background: linear-gradient(180deg,#000,#0b0b0b,#111) !important;
+  color:#f5f5f5 !important;
+}
+
+.navbar,.header,.topbar{
+  background: rgba(0,0,0,.92) !important;
+  border-bottom:1px solid rgba(212,175,55,.25) !important;
+  backdrop-filter: blur(10px);
+}
+
+button,.btn{
+  background: linear-gradient(135deg,var(--gold),var(--gold-light)) !important;
+  color:#000 !important;
+  border:none !important;
+  font-weight:700 !important;
+  border-radius:10px !important;
+}
+
+.movie-card,.card,.content-card{
+  background: var(--card) !important;
+  border:1px solid rgba(212,175,55,.15) !important;
+  border-radius:16px !important;
+  transition:all .25s ease !important;
+}
+
+.movie-card:hover,.card:hover,.content-card:hover{
+  transform: translateY(-6px) scale(1.02) !important;
+  box-shadow:0 10px 30px rgba(212,175,55,.25) !important;
+}
+
+h1,h2,h3,h4,.logo{
+  color:var(--gold-light) !important;
+}
+
+input,select{
+  border:1px solid rgba(212,175,55,.4) !important;
+  border-radius:12px !important;
+}
+
+::-webkit-scrollbar{height:10px;width:10px;}
+::-webkit-scrollbar-thumb{
+  background:var(--gold);
+  border-radius:10px;
+}
+
+.hero,.banner{
+  border-radius:20px !important;
+  overflow:hidden !important;
+}
+
+.search-suggestions,.autocomplete,.search-dropdown{
+  background:#151515 !important;
+  border:1px solid rgba(212,175,55,.3) !important;
+  font-size:18px !important;
+}
+
+/* Mobile search improvements */
+.mobile-search-btn{
+ position:fixed; bottom:20px; right:20px; z-index:9999;
+ background:#D4AF37; color:#000; border-radius:50px;
+ padding:12px 18px; font-weight:bold;
+ box-shadow:0 4px 20px rgba(212,175,55,.4);
+}
+.search-suggestions,.autocomplete,.search-dropdown{
+ font-size:20px !important;
+ max-height:350px; overflow-y:auto;
+}
+.search-suggestions div,.autocomplete li,.search-dropdown li{
+ padding:14px !important;
+}
